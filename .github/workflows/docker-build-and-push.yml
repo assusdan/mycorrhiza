@@ -10,9 +10,6 @@ jobs:
       - 
         name: Checkout
         uses: actions/checkout@v2
-      - 
-        name: Add SHORT_SHA env property with commit short sha
-        run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -34,12 +31,12 @@ jobs:
           platforms: linux/amd64
           push: false
           tags: |
-            assusdan/mycorrhiza:${{ SHORT_SHA }}
+            assusdan/mycorrhiza:${{ github.run_id }}
       - 
         name: Push Image to multiple registries
         uses: akhilerm/tag-push-action@v2.0.0
         with:
-          src: assusdan/mycorrhiza:${{ SHORT_SHA }}
+          src: assusdan/mycorrhiza:${{ github.run_id }}
           dst: |
             ghcr.io/assusdan/mycorrhiza:latest
-            ghcr.io/assusdan/mycorrhiza:${{ SHORT_SHA }}
+            ghcr.io/assusdan/mycorrhiza:${{ github.run_id }}
