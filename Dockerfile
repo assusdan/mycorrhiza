@@ -2,6 +2,7 @@ FROM golang:alpine as build
 WORKDIR src
 COPY . .
 ENV CGO_ENABLED=0
+RUN go mod tidy
 RUN go generate
 RUN go build -o /out/mycorrhiza .
 
