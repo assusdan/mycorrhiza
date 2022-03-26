@@ -42,13 +42,13 @@ var (
 )
 
 //line views/history.qtpl:12
-func StreamPrimitiveDiffHTML(qw422016 *qt422016.Writer, rq *http.Request, h *hyphae.Hypha, u *user.User, hash string) {
+func StreamPrimitiveDiff(qw422016 *qt422016.Writer, rq *http.Request, h hyphae.ExistingHypha, u *user.User, hash string) {
 //line views/history.qtpl:12
 	qw422016.N().S(`
 `)
 //line views/history.qtpl:14
 	lc := l18n.FromRequest(rq)
-	text, err := history.PrimitiveDiffAtRevision(h.TextPartPath(), hash)
+	text, err := history.PrimitiveDiffAtRevision(h.TextFilePath(), hash)
 	if err != nil {
 		text = err.Error()
 	}
@@ -60,7 +60,7 @@ func StreamPrimitiveDiffHTML(qw422016 *qt422016.Writer, rq *http.Request, h *hyp
 	<article>
 		<h1>`)
 //line views/history.qtpl:23
-	qw422016.N().S(lc.Get("ui.diff_title", &l18n.Replacements{"name": beautifulLink(h.Name), "rev": hash}))
+	qw422016.N().S(lc.Get("ui.diff_title", &l18n.Replacements{"name": beautifulLink(h.CanonicalName()), "rev": hash}))
 //line views/history.qtpl:23
 	qw422016.N().S(`</h1>
 		<pre class="codeblock"><code>`)
@@ -76,22 +76,22 @@ func StreamPrimitiveDiffHTML(qw422016 *qt422016.Writer, rq *http.Request, h *hyp
 }
 
 //line views/history.qtpl:28
-func WritePrimitiveDiffHTML(qq422016 qtio422016.Writer, rq *http.Request, h *hyphae.Hypha, u *user.User, hash string) {
+func WritePrimitiveDiff(qq422016 qtio422016.Writer, rq *http.Request, h hyphae.ExistingHypha, u *user.User, hash string) {
 //line views/history.qtpl:28
 	qw422016 := qt422016.AcquireWriter(qq422016)
 //line views/history.qtpl:28
-	StreamPrimitiveDiffHTML(qw422016, rq, h, u, hash)
+	StreamPrimitiveDiff(qw422016, rq, h, u, hash)
 //line views/history.qtpl:28
 	qt422016.ReleaseWriter(qw422016)
 //line views/history.qtpl:28
 }
 
 //line views/history.qtpl:28
-func PrimitiveDiffHTML(rq *http.Request, h *hyphae.Hypha, u *user.User, hash string) string {
+func PrimitiveDiff(rq *http.Request, h hyphae.ExistingHypha, u *user.User, hash string) string {
 //line views/history.qtpl:28
 	qb422016 := qt422016.AcquireByteBuffer()
 //line views/history.qtpl:28
-	WritePrimitiveDiffHTML(qb422016, rq, h, u, hash)
+	WritePrimitiveDiff(qb422016, rq, h, u, hash)
 //line views/history.qtpl:28
 	qs422016 := string(qb422016.B)
 //line views/history.qtpl:28
@@ -102,7 +102,7 @@ func PrimitiveDiffHTML(rq *http.Request, h *hyphae.Hypha, u *user.User, hash str
 }
 
 //line views/history.qtpl:30
-func StreamRecentChangesHTML(qw422016 *qt422016.Writer, n int, lc *l18n.Localizer) {
+func StreamRecentChanges(qw422016 *qt422016.Writer, n int, lc *l18n.Localizer) {
 //line views/history.qtpl:30
 	qw422016.N().S(`
 <div class="layout">
@@ -258,7 +258,7 @@ func StreamRecentChangesHTML(qw422016 *qt422016.Writer, n int, lc *l18n.Localize
 			qw422016.N().S(`">
 			 `)
 //line views/history.qtpl:80
-			qw422016.N().S(recentChangesEntry(entry))
+			qw422016.N().S(recentChanges(entry))
 //line views/history.qtpl:80
 			qw422016.N().S(`
 		</div>
@@ -273,180 +273,175 @@ func StreamRecentChangesHTML(qw422016 *qt422016.Writer, n int, lc *l18n.Localize
 	}
 //line views/history.qtpl:84
 	qw422016.N().S(`
-	`)
-//line views/history.qtpl:85
-	qw422016.N().S(helpTopicBadgeHTML(lc.Locale, "recent_changes"))
-//line views/history.qtpl:85
-	qw422016.N().S(`
 	</section>
 </main>
 </div>
 `)
-//line views/history.qtpl:89
+//line views/history.qtpl:88
 }
 
-//line views/history.qtpl:89
-func WriteRecentChangesHTML(qq422016 qtio422016.Writer, n int, lc *l18n.Localizer) {
-//line views/history.qtpl:89
+//line views/history.qtpl:88
+func WriteRecentChanges(qq422016 qtio422016.Writer, n int, lc *l18n.Localizer) {
+//line views/history.qtpl:88
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line views/history.qtpl:89
-	StreamRecentChangesHTML(qw422016, n, lc)
-//line views/history.qtpl:89
+//line views/history.qtpl:88
+	StreamRecentChanges(qw422016, n, lc)
+//line views/history.qtpl:88
 	qt422016.ReleaseWriter(qw422016)
-//line views/history.qtpl:89
+//line views/history.qtpl:88
 }
 
-//line views/history.qtpl:89
-func RecentChangesHTML(n int, lc *l18n.Localizer) string {
-//line views/history.qtpl:89
+//line views/history.qtpl:88
+func RecentChanges(n int, lc *l18n.Localizer) string {
+//line views/history.qtpl:88
 	qb422016 := qt422016.AcquireByteBuffer()
-//line views/history.qtpl:89
-	WriteRecentChangesHTML(qb422016, n, lc)
-//line views/history.qtpl:89
+//line views/history.qtpl:88
+	WriteRecentChanges(qb422016, n, lc)
+//line views/history.qtpl:88
 	qs422016 := string(qb422016.B)
-//line views/history.qtpl:89
+//line views/history.qtpl:88
 	qt422016.ReleaseByteBuffer(qb422016)
-//line views/history.qtpl:89
+//line views/history.qtpl:88
 	return qs422016
-//line views/history.qtpl:89
+//line views/history.qtpl:88
 }
 
-//line views/history.qtpl:91
-func streamrecentChangesEntry(qw422016 *qt422016.Writer, rev history.Revision) {
-//line views/history.qtpl:91
+//line views/history.qtpl:90
+func streamrecentChanges(qw422016 *qt422016.Writer, rev history.Revision) {
+//line views/history.qtpl:90
 	qw422016.N().S(`
 <div>
 	<time class="recent-changes__entry__time">
 		`)
-//line views/history.qtpl:94
+//line views/history.qtpl:93
 	qw422016.E().S(rev.Time.UTC().Format("15:04 UTC"))
-//line views/history.qtpl:94
+//line views/history.qtpl:93
 	qw422016.N().S(`
 	</time>
 	<span class="recent-changes__entry__message">`)
-//line views/history.qtpl:96
+//line views/history.qtpl:95
 	qw422016.E().S(rev.Hash)
-//line views/history.qtpl:96
+//line views/history.qtpl:95
 	qw422016.N().S(`</span>
 
 	`)
-//line views/history.qtpl:98
+//line views/history.qtpl:97
 	if rev.Username != "anon" {
-//line views/history.qtpl:98
+//line views/history.qtpl:97
 		qw422016.N().S(`
 	<span class="recent-changes__entry__author">
 		&mdash; <a href="/hypha/`)
-//line views/history.qtpl:100
+//line views/history.qtpl:99
 		qw422016.E().S(cfg.UserHypha)
-//line views/history.qtpl:100
+//line views/history.qtpl:99
 		qw422016.N().S(`/`)
-//line views/history.qtpl:100
+//line views/history.qtpl:99
 		qw422016.E().S(rev.Username)
-//line views/history.qtpl:100
+//line views/history.qtpl:99
 		qw422016.N().S(`" rel="author">`)
-//line views/history.qtpl:100
+//line views/history.qtpl:99
 		qw422016.E().S(rev.Username)
-//line views/history.qtpl:100
+//line views/history.qtpl:99
 		qw422016.N().S(`</a>
 	</span>
 	`)
-//line views/history.qtpl:102
+//line views/history.qtpl:101
 	}
-//line views/history.qtpl:102
+//line views/history.qtpl:101
 	qw422016.N().S(`
 </div>
 <div>
 	<span class="recent-changes__entry__links">
 		`)
-//line views/history.qtpl:106
+//line views/history.qtpl:105
 	qw422016.N().S(rev.HyphaeLinksHTML())
-//line views/history.qtpl:106
+//line views/history.qtpl:105
 	qw422016.N().S(`
 	</span>
 	<span class="recent-changes__entry__message">
 		`)
-//line views/history.qtpl:109
+//line views/history.qtpl:108
 	qw422016.E().S(rev.Message)
-//line views/history.qtpl:109
+//line views/history.qtpl:108
 	qw422016.N().S(`
 	</span>
 </div>
 `)
-//line views/history.qtpl:112
+//line views/history.qtpl:111
 }
 
-//line views/history.qtpl:112
-func writerecentChangesEntry(qq422016 qtio422016.Writer, rev history.Revision) {
-//line views/history.qtpl:112
+//line views/history.qtpl:111
+func writerecentChanges(qq422016 qtio422016.Writer, rev history.Revision) {
+//line views/history.qtpl:111
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line views/history.qtpl:112
-	streamrecentChangesEntry(qw422016, rev)
-//line views/history.qtpl:112
+//line views/history.qtpl:111
+	streamrecentChanges(qw422016, rev)
+//line views/history.qtpl:111
 	qt422016.ReleaseWriter(qw422016)
-//line views/history.qtpl:112
+//line views/history.qtpl:111
 }
 
-//line views/history.qtpl:112
-func recentChangesEntry(rev history.Revision) string {
-//line views/history.qtpl:112
+//line views/history.qtpl:111
+func recentChanges(rev history.Revision) string {
+//line views/history.qtpl:111
 	qb422016 := qt422016.AcquireByteBuffer()
-//line views/history.qtpl:112
-	writerecentChangesEntry(qb422016, rev)
-//line views/history.qtpl:112
+//line views/history.qtpl:111
+	writerecentChanges(qb422016, rev)
+//line views/history.qtpl:111
 	qs422016 := string(qb422016.B)
-//line views/history.qtpl:112
+//line views/history.qtpl:111
 	qt422016.ReleaseByteBuffer(qb422016)
-//line views/history.qtpl:112
+//line views/history.qtpl:111
 	return qs422016
-//line views/history.qtpl:112
+//line views/history.qtpl:111
 }
 
-//line views/history.qtpl:114
-func StreamHistoryHTML(qw422016 *qt422016.Writer, rq *http.Request, hyphaName, list string, lc *l18n.Localizer) {
-//line views/history.qtpl:114
+//line views/history.qtpl:113
+func StreamHistory(qw422016 *qt422016.Writer, rq *http.Request, hyphaName, list string, lc *l18n.Localizer) {
+//line views/history.qtpl:113
 	qw422016.N().S(`
 <div class="layout">
 <main class="main-width">
 	<article class="history">
 		<h1>`)
-//line views/history.qtpl:118
+//line views/history.qtpl:117
 	qw422016.N().S(fmt.Sprintf(lc.Get("ui.history_title"), beautifulLink(hyphaName)))
-//line views/history.qtpl:118
+//line views/history.qtpl:117
 	qw422016.N().S(`</h1>
 		`)
-//line views/history.qtpl:119
+//line views/history.qtpl:118
 	qw422016.N().S(list)
-//line views/history.qtpl:119
+//line views/history.qtpl:118
 	qw422016.N().S(`
 	</article>
 </main>
 </div>
 `)
-//line views/history.qtpl:123
+//line views/history.qtpl:122
 }
 
-//line views/history.qtpl:123
-func WriteHistoryHTML(qq422016 qtio422016.Writer, rq *http.Request, hyphaName, list string, lc *l18n.Localizer) {
-//line views/history.qtpl:123
+//line views/history.qtpl:122
+func WriteHistory(qq422016 qtio422016.Writer, rq *http.Request, hyphaName, list string, lc *l18n.Localizer) {
+//line views/history.qtpl:122
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line views/history.qtpl:123
-	StreamHistoryHTML(qw422016, rq, hyphaName, list, lc)
-//line views/history.qtpl:123
+//line views/history.qtpl:122
+	StreamHistory(qw422016, rq, hyphaName, list, lc)
+//line views/history.qtpl:122
 	qt422016.ReleaseWriter(qw422016)
-//line views/history.qtpl:123
+//line views/history.qtpl:122
 }
 
-//line views/history.qtpl:123
-func HistoryHTML(rq *http.Request, hyphaName, list string, lc *l18n.Localizer) string {
-//line views/history.qtpl:123
+//line views/history.qtpl:122
+func History(rq *http.Request, hyphaName, list string, lc *l18n.Localizer) string {
+//line views/history.qtpl:122
 	qb422016 := qt422016.AcquireByteBuffer()
-//line views/history.qtpl:123
-	WriteHistoryHTML(qb422016, rq, hyphaName, list, lc)
-//line views/history.qtpl:123
+//line views/history.qtpl:122
+	WriteHistory(qb422016, rq, hyphaName, list, lc)
+//line views/history.qtpl:122
 	qs422016 := string(qb422016.B)
-//line views/history.qtpl:123
+//line views/history.qtpl:122
 	qt422016.ReleaseByteBuffer(qb422016)
-//line views/history.qtpl:123
+//line views/history.qtpl:122
 	return qs422016
-//line views/history.qtpl:123
+//line views/history.qtpl:122
 }

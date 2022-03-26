@@ -5,14 +5,19 @@ package hyphae
 import (
 	"sort"
 	"strings"
+	"sync"
 )
 
+var byNames = make(map[string]ExistingHypha)
+var byNamesMutex = sync.Mutex{}
+
 // YieldExistingHyphae iterates over all hyphae and yields all existing ones.
-func YieldExistingHyphae() chan *Hypha {
-	ch := make(chan *Hypha)
+func YieldExistingHyphae() chan ExistingHypha {
+	ch := make(chan ExistingHypha)
 	go func() {
 		for _, h := range byNames {
-			if h.Exists {
+			switch h.(type) {
+			default:
 				ch <- h
 			}
 		}
@@ -22,13 +27,18 @@ func YieldExistingHyphae() chan *Hypha {
 }
 
 // FilterHyphaeWithText filters the source channel and yields only those hyphae than have text parts.
-func FilterHyphaeWithText(src chan *Hypha) chan *Hypha {
+func FilterHyphaeWithText(src chan ExistingHypha) chan ExistingHypha {
 	// TODO: reimplement as a function with a callback?
-	sink := make(chan *Hypha)
+	sink := make(chan ExistingHypha)
 	go func() {
 		for h := range src {
-			if h.TextPath != "" {
+			switch h := h.(type) {
+			case *TextualHypha:
 				sink <- h
+			case *MediaHypha:
+				if h.HasTextFile() {
+					sink <- h
+				}
 			}
 		}
 		close(sink)
@@ -79,10 +89,10 @@ func PathographicSort(src chan string) <-chan string {
 }
 
 // Subhyphae returns slice of subhyphae.
-func (h *Hypha) Subhyphae() []*Hypha {
-	var hyphae []*Hypha
+func Subhyphae(h Hypha) []ExistingHypha {
+	var hyphae []ExistingHypha
 	for subh := range YieldExistingHyphae() {
-		if strings.HasPrefix(subh.Name, h.Name+"/") {
+		if strings.HasPrefix(subh.CanonicalName(), h.CanonicalName()+"/") {
 			hyphae = append(hyphae, subh)
 		}
 	}
@@ -93,7 +103,7 @@ func (h *Hypha) Subhyphae() []*Hypha {
 func AreFreeNames(hyphaNames ...string) (firstFailure string, ok bool) {
 	for h := range YieldExistingHyphae() {
 		for _, hn := range hyphaNames {
-			if hn == h.Name {
+			if hn == h.CanonicalName() {
 				return hn, false
 			}
 		}

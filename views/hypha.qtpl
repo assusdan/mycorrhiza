@@ -11,7 +11,7 @@
 
 {% func mycoLink(lc *l18n.Localizer) %}<a href="/help/en/mycomarkup" class="shy-link">{%s lc.Get("ui.notexist_write_myco") %}</a>{% endfunc %}
 
-{% func nonExistentHyphaNotice(h *hyphae.Hypha, u *user.User, lc *l18n.Localizer) %}
+{% func nonExistentHyphaNotice(h hyphae.Hypha, u *user.User, lc *l18n.Localizer) %}
 <section class="non-existent-hypha">
 	<h2 class="non-existent-hypha__title">{%s lc.Get("ui.notexist_heading") %}</h2>
 	{% if cfg.UseAuth && u.Group == "anon" %}
@@ -27,19 +27,19 @@
 		<h3 class="non-existent-hypha__subtitle">📝 {%s lc.Get("ui.notexist_write") %}</h3>
 		<p>{%s= lc.Get("ui.notexist_write_tip1", &l18n.Replacements{"myco": mycoLink(lc)}) %}</p>
 		<p>{%s lc.Get("ui.notexist_write_tip2") %}</p>
-		<a class="btn btn_accent stick-to-bottom" href="/edit/{%s h.Name %}">{%s lc.Get("ui.notexist_write_button") %}</a>
+		<a class="btn btn_accent stick-to-bottom" href="/edit/{%s h.CanonicalName() %}">{%s lc.Get("ui.notexist_write_button") %}</a>
 	</section>
 
 	<section class="non-existent-hypha__way">
 		<h3 class="non-existent-hypha__subtitle">🖼 {%s lc.Get("ui.notexist_media") %}</h3>
 		<p>{%s lc.Get("ui.notexist_media_tip1") %}</p>
-		<form action="/upload-binary/{%s h.Name %}"
+		<form action="/upload-binary/{%s h.CanonicalName() %}"
         		method="post" enctype="multipart/form-data"
         		class="upload-binary">
         	<label for="upload-binary__input"></label>
         	<input type="file" id="upload-binary__input" name="binary">
 
-        	<button type="submit" class="btn stick-to-bottom" value="Upload">{%s lc.Get("ui.attach_upload")%}</button>
+        	<button type="submit" class="btn stick-to-bottom" value="Upload">{%s lc.Get("ui.media_upload")%}</button>
         </form>
 	</section>
 	</div>
@@ -47,11 +47,11 @@
 </section>
 {% endfunc %}
 
-{% func NaviTitleHTML(h *hyphae.Hypha) %}
+{% func NaviTitle(h hyphae.Hypha) %}
 {% code 
 	var (
 		prevAcc = "/hypha/"
-		parts = strings.Split(h.Name, "/")
+		parts = strings.Split(h.CanonicalName(), "/")
 	)
 %}
 <h1 class="navi-title">
@@ -75,35 +75,35 @@
 </h1>
 {% endfunc %}
 
-{% func AttachmentHTMLRaw(h *hyphae.Hypha) %}{%= AttachmentHTML(h, l18n.New("en", "en")) %}{% endfunc %}
+{% func MediaRaw(h *hyphae.MediaHypha) %}{%= Media(h, l18n.New("en", "en")) %}{% endfunc %}
 
-{% func AttachmentHTML(h *hyphae.Hypha, lc *l18n.Localizer) %}
-	{% switch filepath.Ext(h.BinaryPath) %}
+{% func Media(h *hyphae.MediaHypha, lc *l18n.Localizer) %}
+	{% switch filepath.Ext(h.MediaFilePath()) %}
 
 	{% case ".jpg", ".gif", ".png", ".webp", ".svg", ".ico" %}
 	<div class="binary-container binary-container_with-img">
-		<a href="/binary/{%s= h.Name %}"><img src="/binary/{%s= h.Name %}"/></a>
+		<a href="/binary/{%s= h.CanonicalName() %}"><img src="/binary/{%s= h.CanonicalName() %}"/></a>
 	</div>
 
 	{% case ".ogg", ".webm", ".mp4" %}
 	<div class="binary-container binary-container_with-video">
 		<video controls>
-			<source src="/binary/{%s= h.Name %}"/>
-			<p>{%s lc.Get("ui.media_novideo") %} <a href="/binary/{%s= h.Name %}">{%s lc.Get("ui.media_novideo_link") %}</a></p>
+			<source src="/binary/{%s= h.CanonicalName() %}"/>
+			<p>{%s lc.Get("ui.media_novideo") %} <a href="/binary/{%s= h.CanonicalName() %}">{%s lc.Get("ui.media_novideo_link") %}</a></p>
 		</video>
 	</div>
 
 	{% case ".mp3" %}
 	<div class="binary-container binary-container_with-audio">
 		<audio controls>
-			<source src="/binary/{%s= h.Name %}"/>
-			<p>{%s lc.Get("ui.media_noaudio") %} <a href="/binary/{%s= h.Name %}">{%s lc.Get("ui.media_noaudio_link") %}</a></p>
+			<source src="/binary/{%s= h.CanonicalName() %}"/>
+			<p>{%s lc.Get("ui.media_noaudio") %} <a href="/binary/{%s= h.CanonicalName() %}">{%s lc.Get("ui.media_noaudio_link") %}</a></p>
 		</audio>
 	</div>
 
 	{% default %}
 	<div class="binary-container binary-container_with-nothing">
-		<p><a href="/binary/{%s= h.Name %}">{%s lc.Get("ui.media_download") %}</a></p>
+		<p><a href="/binary/{%s= h.CanonicalName() %}">{%s lc.Get("ui.media_download") %}</a></p>
 	</div>
 {% endswitch %}
 {% endfunc %}

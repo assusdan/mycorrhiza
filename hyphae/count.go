@@ -4,7 +4,7 @@ import (
 	"sync"
 )
 
-// Its value is number of all existing hyphae. Hypha mutators are expected to manipulate the value. It is concurrent-safe.
+// Its value is number of all existing hyphae. NonEmptyHypha mutators are expected to manipulate the value. It is concurrent-safe.
 var count = struct {
 	value int
 	sync.Mutex
@@ -17,7 +17,7 @@ func ResetCount() {
 	count.Unlock()
 }
 
-// Count how many hyphae there are.
+// Count how many hyphae there are. This is a O(1), the number of hyphae is stored in memory.
 func Count() int {
 	count.Lock()
 	defer count.Unlock()

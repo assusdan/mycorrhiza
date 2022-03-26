@@ -33,10 +33,9 @@ func initAdmin(r *mux.Router) {
 
 // handlerAdmin provides the admin panel.
 func handlerAdmin(w http.ResponseWriter, rq *http.Request) {
-	var lc = l18n.FromRequest(rq)
 	w.Header().Set("Content-Type", "text/html;charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	io.WriteString(w, views.BaseHTML(lc.Get("admin.panel_title"), views.AdminPanelHTML(lc), lc, user.FromRequest(rq)))
+	views.AdminPanel(views.MetaFrom(w, rq))
 }
 
 // handlerAdminShutdown kills the wiki.
@@ -70,8 +69,8 @@ func handlerAdminUsers(w http.ResponseWriter, rq *http.Request) {
 	})
 
 	var lc = l18n.FromRequest(rq)
-	html := views.AdminUsersPanelHTML(userList, lc)
-	html = views.BaseHTML(lc.Get("admin.users_title"), html, lc, user.FromRequest(rq))
+	html := views.AdminUsersPanel(userList, lc)
+	html = views.Base(lc.Get("admin.users_title"), html, lc, user.FromRequest(rq))
 
 	w.Header().Set("Content-Type", mime.TypeByExtension(".html"))
 	io.WriteString(w, html)
@@ -109,8 +108,8 @@ func handlerAdminUserEdit(w http.ResponseWriter, rq *http.Request) {
 	f.Put("group", u.Group)
 
 	var lc = l18n.FromRequest(rq)
-	html := views.AdminUserEditHTML(u, f, lc)
-	html = views.BaseHTML(fmt.Sprintf(lc.Get("admin.user_title"), u.Name), html, lc, user.FromRequest(rq))
+	html := views.AdminUserEdit(u, f, lc)
+	html = views.Base(fmt.Sprintf(lc.Get("admin.user_title"), u.Name), html, lc, user.FromRequest(rq))
 
 	if f.HasError() {
 		w.WriteHeader(http.StatusBadRequest)
@@ -139,8 +138,8 @@ func handlerAdminUserDelete(w http.ResponseWriter, rq *http.Request) {
 	}
 
 	var lc = l18n.FromRequest(rq)
-	html := views.AdminUserDeleteHTML(u, util.NewFormData(), lc)
-	html = views.BaseHTML(fmt.Sprintf(lc.Get("admin.user_title"), u.Name), html, l18n.FromRequest(rq), user.FromRequest(rq))
+	html := views.AdminUserDelete(u, util.NewFormData(), lc)
+	html = views.Base(fmt.Sprintf(lc.Get("admin.user_title"), u.Name), html, l18n.FromRequest(rq), user.FromRequest(rq))
 
 	if f.HasError() {
 		w.WriteHeader(http.StatusBadRequest)
@@ -153,8 +152,8 @@ func handlerAdminUserNew(w http.ResponseWriter, rq *http.Request) {
 	var lc = l18n.FromRequest(rq)
 	if rq.Method == http.MethodGet {
 		// New user form
-		html := views.AdminUserNewHTML(util.NewFormData(), lc)
-		html = views.BaseHTML(lc.Get("admin.newuser_title"), html, lc, user.FromRequest(rq))
+		html := views.AdminUserNew(util.NewFormData(), lc)
+		html = views.Base(lc.Get("admin.newuser_title"), html, lc, user.FromRequest(rq))
 
 		w.Header().Set("Content-Type", mime.TypeByExtension(".html"))
 		io.WriteString(w, html)
@@ -165,8 +164,8 @@ func handlerAdminUserNew(w http.ResponseWriter, rq *http.Request) {
 		err := user.Register(f.Get("name"), f.Get("password"), f.Get("group"), "local", true)
 
 		if err != nil {
-			html := views.AdminUserNewHTML(f.WithError(err), lc)
-			html = views.BaseHTML(lc.Get("admin.newuser_title"), html, lc, user.FromRequest(rq))
+			html := views.AdminUserNew(f.WithError(err), lc)
+			html = views.Base(lc.Get("admin.newuser_title"), html, lc, user.FromRequest(rq))
 
 			w.WriteHeader(http.StatusBadRequest)
 			w.Header().Set("Content-Type", mime.TypeByExtension(".html"))

@@ -8,72 +8,43 @@ import (
 	"github.com/bouncepaw/mycorrhiza/user"
 )
 
+// TODO: get rid of this abomination
+
 func canFactory(
-	rejectLogger func(*hyphae.Hypha, *user.User, string),
+	rejectLogger func(hyphae.Hypha, *user.User, string),
 	action string,
-	dispatcher func(*hyphae.Hypha, *user.User, *l18n.Localizer) (string, string),
+	dispatcher func(hyphae.Hypha, *user.User, *l18n.Localizer) (string, string),
 	noRightsMsg string,
 	notExistsMsg string,
 	mustExist bool,
-) func(*user.User, *hyphae.Hypha, *l18n.Localizer) (string, error) {
-	return func(u *user.User, h *hyphae.Hypha, lc *l18n.Localizer) (string, error) {
+) func(*user.User, hyphae.Hypha, *l18n.Localizer) error {
+	return func(u *user.User, h hyphae.Hypha, lc *l18n.Localizer) error {
 		if !u.CanProceed(action) {
 			rejectLogger(h, u, "no rights")
-			return lc.Get("ui.act_no_rights"), errors.New(lc.Get(noRightsMsg))
+			return errors.New(noRightsMsg)
 		}
 
-		if mustExist && !h.Exists {
-			rejectLogger(h, u, "does not exist")
-			return lc.Get("ui.act_notexist"), errors.New(lc.Get(notExistsMsg))
+		if mustExist {
+			switch h.(type) {
+			case *hyphae.EmptyHypha:
+				rejectLogger(h, u, "does not exist")
+				return errors.New(notExistsMsg)
+			}
 		}
 
 		if dispatcher == nil {
-			return "", nil
+			return nil
 		}
 		errmsg, errtitle := dispatcher(h, u, lc)
 		if errtitle == "" {
-			return "", nil
+			return nil
 		}
-		return errtitle, errors.New(errmsg)
+		return errors.New(errmsg)
 	}
 }
 
 // CanDelete and etc are hyphae operation checkers based on user rights and hyphae existence.
 var (
-	CanDelete = canFactory(
-		rejectDeleteLog,
-		"delete-confirm",
-		nil,
-		"ui.act_norights_delete",
-		"ui.act_notexist_delete",
-		true,
-	)
-
-	CanRename = canFactory(
-		rejectRenameLog,
-		"rename-confirm",
-		nil,
-		"ui.act_norights_rename",
-		"ui.act_notexist_rename",
-		true,
-	)
-
-	CanUnattach = canFactory(
-		rejectUnattachLog,
-		"unattach-confirm",
-		func(h *hyphae.Hypha, u *user.User, lc *l18n.Localizer) (errmsg, errtitle string) {
-			if h.BinaryPath == "" {
-				rejectUnattachLog(h, u, "no amnt")
-				return lc.Get("ui.act_noattachment_tip"), lc.Get("ui.act_noattachment")
-			}
-
-			return "", ""
-		},
-		"ui.act_norights_unattach",
-		"ui.act_notexist_unattach",
-		true,
-	)
-
 	CanEdit = canFactory(
 		rejectEditLog,
 		"upload-text",
@@ -84,10 +55,10 @@ var (
 	)
 
 	CanAttach = canFactory(
-		rejectAttachLog,
+		rejectUploadMediaLog,
 		"upload-binary",
 		nil,
-		"ui.act_norights_attach",
+		"ui.act_norights_media",
 		"You cannot attach a hypha that does not exist",
 		false,
 	)

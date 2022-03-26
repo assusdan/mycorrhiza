@@ -1,12 +1,9 @@
 // Package web contains web handlers and initialization stuff.
-//
-// It exports just one function: Init. Call it if you want to have web capabilities.
 package web
 
 import (
 	"fmt"
 	"io"
-	"log"
 	"mime"
 	"net/http"
 	"net/url"
@@ -24,14 +21,13 @@ import (
 var stylesheets = []string{"default.css", "custom.css"}
 
 // httpErr is used by many handlers to signal errors in a compact way.
-func httpErr(w http.ResponseWriter, lc *l18n.Localizer, status int, name, title, errMsg string) {
-	log.Println(errMsg, "for", name)
+func httpErr(w http.ResponseWriter, lc *l18n.Localizer, status int, name, errMsg string) {
 	w.Header().Set("Content-Type", mime.TypeByExtension(".html"))
 	w.WriteHeader(status)
 	fmt.Fprint(
 		w,
-		views.BaseHTML(
-			title,
+		views.Base(
+			"Error",
 			fmt.Sprintf(
 				`<main class="main-width"><p>%s. <a href="/hypha/%s">%s<a></p></main>`,
 				errMsg,
@@ -60,7 +56,7 @@ func handlerUserList(w http.ResponseWriter, rq *http.Request) {
 	lc := l18n.FromRequest(rq)
 	w.Header().Set("Content-Type", mime.TypeByExtension(".html"))
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(views.BaseHTML(lc.Get("ui.users_title"), views.UserListHTML(lc), lc, user.FromRequest(rq))))
+	w.Write([]byte(views.Base(lc.Get("ui.users_title"), views.UserList(lc), lc, user.FromRequest(rq))))
 }
 
 func handlerRobotsTxt(w http.ResponseWriter, rq *http.Request) {
@@ -80,6 +76,9 @@ func Handler() http.Handler {
 	router.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, rq *http.Request) {
 			util.PrepareRq(rq)
+			w.Header().Add("Content-Security-Policy",
+				"default-src 'self' telegram.org *.telegram.org; "+
+					"img-src * data:; media-src *; style-src *; font-src * data:")
 			next.ServeHTTP(w, rq)
 		})
 	})
@@ -109,6 +108,7 @@ func Handler() http.Handler {
 	initStuff(wikiRouter)
 	initSearch(wikiRouter)
 	initBacklinks(wikiRouter)
+	initCategories(wikiRouter)
 
 	// Admin routes.
 	if cfg.UseAuth {

@@ -2,6 +2,7 @@ package tree
 
 import (
 	"fmt"
+	"github.com/bouncepaw/mycorrhiza/hyphae/iteration"
 	"path"
 	"sort"
 	"strings"
@@ -18,31 +19,31 @@ func findSiblings(hyphaName string) []*sibling {
 	}
 	var (
 		siblingsMap  = make(map[string]bool)
-		siblingCheck = func(h *hyphae.Hypha) hyphae.CheckResult {
+		siblingCheck = func(h hyphae.Hypha) iteration.CheckResult {
 			switch {
-			case h.Name == hyphaName, // Hypha is no sibling of itself
-				h.Name == parentHyphaName: // Parent hypha is no sibling of its child
-				return hyphae.CheckContinue
+			case h.CanonicalName() == hyphaName, // NonEmptyHypha is no sibling of itself
+				h.CanonicalName() == parentHyphaName: // Parent hypha is no sibling of its child
+				return iteration.CheckContinue
 			}
-			if (parentHyphaName != "" && strings.HasPrefix(h.Name, parentHyphaName+"/")) ||
+			if (parentHyphaName != "" && strings.HasPrefix(h.CanonicalName(), parentHyphaName+"/")) ||
 				(parentHyphaName == "") {
 				var (
-					rawSubPath = strings.TrimPrefix(h.Name, parentHyphaName)[1:]
+					rawSubPath = strings.TrimPrefix(h.CanonicalName(), parentHyphaName)[1:]
 					slashIdx   = strings.IndexRune(rawSubPath, '/')
 				)
 				if slashIdx > -1 {
-					var sibPath = h.Name[:slashIdx+len(parentHyphaName)+1]
+					var sibPath = h.CanonicalName()[:slashIdx+len(parentHyphaName)+1]
 					if _, exists := siblingsMap[sibPath]; !exists {
 						siblingsMap[sibPath] = false
 					}
 				} else { // it is a straight sibling
-					siblingsMap[h.Name] = true
+					siblingsMap[h.CanonicalName()] = true
 				}
 			}
-			return hyphae.CheckContinue
+			return iteration.CheckContinue
 		}
 
-		i7n = hyphae.NewIteration()
+		i7n = iteration.NewIteration()
 	)
 	siblingsMap[hyphaName] = true
 
@@ -63,19 +64,19 @@ func findSiblings(hyphaName string) []*sibling {
 
 func countSubhyphae(siblings []*sibling) {
 	var (
-		subhyphaCheck = func(h *hyphae.Hypha) hyphae.CheckResult {
+		subhyphaCheck = func(h hyphae.Hypha) iteration.CheckResult {
 			for _, s := range siblings {
-				if path.Dir(h.Name) == s.name {
+				if path.Dir(h.CanonicalName()) == s.name {
 					s.directSubhyphaeCount++
-					return hyphae.CheckContinue
-				} else if strings.HasPrefix(h.Name, s.name+"/") {
+					return iteration.CheckContinue
+				} else if strings.HasPrefix(h.CanonicalName(), s.name+"/") {
 					s.indirectSubhyphaeCount++
-					return hyphae.CheckContinue
+					return iteration.CheckContinue
 				}
 			}
-			return hyphae.CheckContinue
+			return iteration.CheckContinue
 		}
-		i7n = hyphae.NewIteration()
+		i7n = iteration.NewIteration()
 	)
 	i7n.AddCheck(subhyphaCheck)
 	i7n.Ignite()
@@ -136,7 +137,7 @@ func figureOutChildren(hyphaName string) child {
 	)
 
 	for desc := range hyphae.YieldExistingHyphae() {
-		var descName = desc.Name
+		var descName = desc.CanonicalName()
 		if strings.HasPrefix(descName, descPrefix) {
 			var subPath = strings.TrimPrefix(descName, descPrefix)
 			addHyphaToChild(descName, subPath, &child)

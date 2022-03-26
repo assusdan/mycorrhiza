@@ -58,8 +58,8 @@ func handlerHelp(w http.ResponseWriter, rq *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		_, _ = io.WriteString(
 			w,
-			views.BaseHTML(lc.Get("help.entry_not_found"),
-				views.HelpHTML(views.HelpEmptyErrorHTML(lc), lang, lc),
+			views.Base(lc.Get("help.entry_not_found"),
+				views.Help(views.HelpEmptyError(lc), lang, lc),
 				lc,
 				user.FromRequest(rq)),
 		)
@@ -69,8 +69,8 @@ func handlerHelp(w http.ResponseWriter, rq *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = io.WriteString(
 			w,
-			views.BaseHTML(err.Error(),
-				views.HelpHTML(err.Error(), lang, lc),
+			views.Base(err.Error(),
+				views.Help(err.Error(), lang, lc),
 				lc,
 				user.FromRequest(rq)),
 		)
@@ -84,8 +84,8 @@ func handlerHelp(w http.ResponseWriter, rq *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, _ = io.WriteString(
 		w,
-		views.BaseHTML(lc.Get("help.title"),
-			views.HelpHTML(result, lang, lc),
+		views.Base(lc.Get("help.title"),
+			views.Help(result, lang, lc),
 			lc,
 			user.FromRequest(rq)),
 	)
@@ -96,7 +96,7 @@ func handlerList(w http.ResponseWriter, rq *http.Request) {
 	u := user.FromRequest(rq)
 	var lc = l18n.FromRequest(rq)
 	util.PrepareRq(rq)
-	util.HTTP200Page(w, views.BaseHTML(lc.Get("ui.list_title"), views.HyphaListHTML(lc), lc, u))
+	util.HTTP200Page(w, views.Base(lc.Get("ui.list_title"), views.HyphaList(lc), lc, u))
 }
 
 // handlerReindex reindexes all hyphae by checking the wiki storage directory anew.
@@ -104,7 +104,7 @@ func handlerReindex(w http.ResponseWriter, rq *http.Request) {
 	util.PrepareRq(rq)
 	if ok := user.CanProceed(rq, "reindex"); !ok {
 		var lc = l18n.FromRequest(rq)
-		httpErr(w, lc, http.StatusForbidden, cfg.HomeHypha, lc.Get("ui.no_rights"), lc.Get("ui.reindex_no_rights"))
+		httpErr(w, lc, http.StatusForbidden, cfg.HomeHypha, lc.Get("ui.reindex_no_rights"))
 		log.Println("Rejected", rq.URL)
 		return
 	}
@@ -122,7 +122,7 @@ func handlerUpdateHeaderLinks(w http.ResponseWriter, rq *http.Request) {
 	util.PrepareRq(rq)
 	if ok := user.CanProceed(rq, "update-header-links"); !ok {
 		var lc = l18n.FromRequest(rq)
-		httpErr(w, lc, http.StatusForbidden, cfg.HomeHypha, lc.Get("ui.no_rights"), lc.Get("ui.header_no_rights"))
+		httpErr(w, lc, http.StatusForbidden, cfg.HomeHypha, lc.Get("ui.header_no_rights"))
 		log.Println("Rejected", rq.URL)
 		return
 	}
@@ -139,13 +139,13 @@ func handlerRandom(w http.ResponseWriter, rq *http.Request) {
 	)
 	if amountOfHyphae == 0 {
 		var lc = l18n.FromRequest(rq)
-		httpErr(w, lc, http.StatusNotFound, cfg.HomeHypha, lc.Get("ui.random_no_hyphae"), lc.Get("ui.random_no_hyphae_tip"))
+		httpErr(w, lc, http.StatusNotFound, cfg.HomeHypha, lc.Get("ui.random_no_hyphae_tip"))
 		return
 	}
 	i := rand.Intn(amountOfHyphae)
 	for h := range hyphae.YieldExistingHyphae() {
 		if i == 0 {
-			randomHyphaName = h.Name
+			randomHyphaName = h.CanonicalName()
 		}
 		i--
 	}
@@ -160,7 +160,7 @@ func handlerAbout(w http.ResponseWriter, rq *http.Request) {
 		lc    = l18n.FromRequest(rq)
 		title = lc.Get("ui.about_title", &l18n.Replacements{"name": cfg.WikiName})
 	)
-	_, err := io.WriteString(w, views.BaseHTML(title, views.AboutHTML(lc), lc, user.FromRequest(rq)))
+	_, err := io.WriteString(w, views.Base(title, views.AboutHTML(lc), lc, user.FromRequest(rq)))
 	if err != nil {
 		log.Println(err)
 	}

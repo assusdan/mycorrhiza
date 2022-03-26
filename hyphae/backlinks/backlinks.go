@@ -2,6 +2,7 @@
 package backlinks
 
 import (
+	"log"
 	"os"
 
 	"github.com/bouncepaw/mycorrhiza/hyphae"
@@ -42,20 +43,20 @@ var backlinkIndex = make(map[string]linkSet)
 func IndexBacklinks() {
 	// It is safe to ignore the mutex, because there is only one worker.
 	for h := range hyphae.FilterHyphaeWithText(hyphae.YieldExistingHyphae()) {
-		foundLinks := extractHyphaLinksFromContent(h.Name, fetchText(h))
+		foundLinks := extractHyphaLinksFromContent(h.CanonicalName(), fetchText(h))
 		for _, link := range foundLinks {
 			if _, exists := backlinkIndex[link]; !exists {
 				backlinkIndex[link] = make(linkSet)
 			}
-			backlinkIndex[link][h.Name] = struct{}{}
+			backlinkIndex[link][h.CanonicalName()] = struct{}{}
 		}
 	}
 }
 
 // BacklinksCount returns the amount of backlinks to the hypha.
-func BacklinksCount(h *hyphae.Hypha) int {
-	if _, exists := backlinkIndex[h.Name]; exists {
-		return len(backlinkIndex[h.Name])
+func BacklinksCount(h hyphae.Hypha) int {
+	if links, exists := backlinkIndex[h.CanonicalName()]; exists {
+		return len(links)
 	}
 	return 0
 }
@@ -71,15 +72,26 @@ func toLinkSet(xs []string) linkSet {
 	return result
 }
 
-func fetchText(h *hyphae.Hypha) string {
-	if h.TextPath == "" {
+func fetchText(h hyphae.Hypha) string {
+	var path string
+	switch h := h.(type) {
+	case *hyphae.EmptyHypha:
+		return ""
+	case *hyphae.TextualHypha:
+		path = h.TextFilePath()
+	case *hyphae.MediaHypha:
+		if !h.HasTextFile() {
+			return ""
+		}
+		path = h.TextFilePath()
+	}
+
+	text, err := os.ReadFile(path)
+	if err != nil {
+		log.Println(err)
 		return ""
 	}
-	text, err := os.ReadFile(h.TextPath)
-	if err == nil {
-		return string(text)
-	}
-	return ""
+	return string(text)
 }
 
 // backlinkIndexOperation is an operation for the backlink index. This operation is executed async-safe.

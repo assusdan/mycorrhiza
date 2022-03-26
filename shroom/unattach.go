@@ -5,37 +5,28 @@ import (
 
 	"github.com/bouncepaw/mycorrhiza/history"
 	"github.com/bouncepaw/mycorrhiza/hyphae"
-	"github.com/bouncepaw/mycorrhiza/l18n"
 	"github.com/bouncepaw/mycorrhiza/user"
 )
 
-// UnattachHypha unattaches hypha and makes a history record about that.
-func UnattachHypha(u *user.User, h *hyphae.Hypha, lc *l18n.Localizer) (hop *history.Op, errtitle string) {
-	hop = history.Operation(history.TypeUnattachHypha)
-
-	if errtitle, err := CanUnattach(u, h, lc); errtitle != "" {
-		hop.WithErrAbort(err)
-		return hop, errtitle
-	}
-
-	hop.
-		WithFilesRemoved(h.BinaryPath).
-		WithMsg(fmt.Sprintf("Unattach ‘%s’", h.Name)).
+// RemoveMedia removes media from the media hypha and makes a history record about that. If it only had media, the hypha will be deleted. If it also had text, the hypha will become textual.
+func RemoveMedia(u *user.User, h *hyphae.MediaHypha) error {
+	hop := history.
+		Operation(history.TypeRemoveMedia).
+		WithFilesRemoved(h.MediaFilePath()).
+		WithMsg(fmt.Sprintf("Remove media from ‘%s’", h.CanonicalName())).
 		WithUser(u).
 		Apply()
 
 	if len(hop.Errs) > 0 {
-		rejectUnattachLog(h, u, "fail")
+		rejectRemoveMediaLog(h, u, "fail")
 		// FIXME: something may be wrong here
-		return hop.WithErrAbort(fmt.Errorf("Could not unattach this hypha due to internal server errors: <code>%v</code>", hop.Errs)), "Error"
+		return fmt.Errorf("Could not unattach this hypha due to internal server errors: <code>%v</code>", hop.Errs)
 	}
 
-	if h.BinaryPath != "" {
-		h.BinaryPath = ""
+	if h.HasTextFile() {
+		hyphae.Insert(hyphae.ShrinkMediaToTextual(h))
+	} else {
+		hyphae.DeleteHypha(h)
 	}
-	// If nothing is left of the hypha
-	if h.TextPath == "" {
-		h.Delete()
-	}
-	return hop, ""
+	return nil
 }

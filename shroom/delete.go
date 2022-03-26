@@ -6,28 +6,27 @@ import (
 
 	"github.com/bouncepaw/mycorrhiza/history"
 	"github.com/bouncepaw/mycorrhiza/hyphae"
-	"github.com/bouncepaw/mycorrhiza/l18n"
 	"github.com/bouncepaw/mycorrhiza/user"
 )
 
-// DeleteHypha deletes hypha and makes a history record about that.
-func DeleteHypha(u *user.User, h *hyphae.Hypha, lc *l18n.Localizer) (hop *history.Op, errtitle string) {
-	hop = history.Operation(history.TypeDeleteHypha)
+// Delete deletes the hypha and makes a history record about that.
+func Delete(u *user.User, h hyphae.ExistingHypha) error {
+	hop := history.
+		Operation(history.TypeDeleteHypha).
+		WithMsg(fmt.Sprintf("Delete ‘%s’", h.CanonicalName())).
+		WithUser(u)
 
-	if errtitle, err := CanDelete(u, h, lc); errtitle != "" {
-		hop.WithErrAbort(err)
-		return hop, errtitle
+	originalText, _ := FetchTextFile(h)
+	switch h := h.(type) {
+	case *hyphae.MediaHypha:
+		hop.WithFilesRemoved(h.MediaFilePath(), h.TextFilePath())
+	case *hyphae.TextualHypha:
+		hop.WithFilesRemoved(h.TextFilePath())
 	}
-
-	originalText, _ := FetchTextPart(h)
-	hop.
-		WithFilesRemoved(h.TextPath, h.BinaryPath).
-		WithMsg(fmt.Sprintf("Delete ‘%s’", h.Name)).
-		WithUser(u).
-		Apply()
-	if !hop.HasErrors() {
-		backlinks.UpdateBacklinksAfterDelete(h, originalText)
-		h.Delete()
+	if hop.Apply().HasErrors() {
+		return hop.Errs[0]
 	}
-	return hop, ""
+	backlinks.UpdateBacklinksAfterDelete(h, originalText)
+	hyphae.DeleteHypha(h)
+	return nil
 }

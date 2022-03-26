@@ -31,19 +31,22 @@ type User struct {
 
 // Route — Right (more is more right)
 var minimalRights = map[string]int{
-	"edit":                1,
-	"upload-binary":       1,
-	"upload-text":         1,
-	"rename-ask":          2,
-	"rename-confirm":      2,
-	"unattach-ask":        2,
-	"unattach-confirm":    2,
-	"update-header-links": 3,
-	"delete-ask":          3,
-	"delete-confirm":      3,
-	"reindex":             4,
-	"admin":               4,
-	"admin/shutdown":      4,
+	"text":                 0,
+	"backlinks":            0,
+	"history":              0,
+	"media":                1,
+	"edit":                 1,
+	"upload-binary":        1,
+	"upload-text":          1,
+	"add-to-category":      1,
+	"remove-from-category": 1,
+	"rename":               2,
+	"remove-media":         2,
+	"update-header-links":  3,
+	"delete":               3,
+	"reindex":              4,
+	"admin":                4,
+	"admin/shutdown":       4,
 }
 
 var groups = []string{
@@ -108,8 +111,11 @@ func (user *User) CanProceed(route string) bool {
 	defer user.RUnlock()
 
 	right := groupRight[user.Group]
-	minimalRight := minimalRights[route]
+	minimalRight, specified := minimalRights[route]
 
+	if !specified {
+		return false
+	}
 	return right >= minimalRight
 }
 
