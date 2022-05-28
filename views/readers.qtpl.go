@@ -23,305 +23,311 @@ import "github.com/bouncepaw/mycorrhiza/cfg"
 import "github.com/bouncepaw/mycorrhiza/hyphae"
 
 //line views/readers.qtpl:8
-import "github.com/bouncepaw/mycorrhiza/l18n"
+import "github.com/bouncepaw/mycorrhiza/hypview"
 
 //line views/readers.qtpl:9
-import "github.com/bouncepaw/mycorrhiza/mimetype"
+import "github.com/bouncepaw/mycorrhiza/categories"
 
 //line views/readers.qtpl:10
-import "github.com/bouncepaw/mycorrhiza/tree"
+import "github.com/bouncepaw/mycorrhiza/l18n"
 
 //line views/readers.qtpl:11
-import "github.com/bouncepaw/mycorrhiza/user"
+import "github.com/bouncepaw/mycorrhiza/mimetype"
 
 //line views/readers.qtpl:12
-import "github.com/bouncepaw/mycorrhiza/util"
+import "github.com/bouncepaw/mycorrhiza/tree"
+
+//line views/readers.qtpl:13
+import "github.com/bouncepaw/mycorrhiza/user"
 
 //line views/readers.qtpl:14
+import "github.com/bouncepaw/mycorrhiza/util"
+
+//line views/readers.qtpl:15
+import "github.com/bouncepaw/mycorrhiza/viewutil"
+
+//line views/readers.qtpl:17
 import (
 	qtio422016 "io"
 
 	qt422016 "github.com/valyala/quicktemplate"
 )
 
-//line views/readers.qtpl:14
+//line views/readers.qtpl:17
 var (
 	_ = qtio422016.Copy
 	_ = qt422016.AcquireByteBuffer
 )
 
-//line views/readers.qtpl:14
+//line views/readers.qtpl:17
 func StreamMediaMenu(qw422016 *qt422016.Writer, rq *http.Request, h hyphae.Hypha, u *user.User) {
-//line views/readers.qtpl:14
-	qw422016.N().S(`
-`)
-//line views/readers.qtpl:16
-	lc := l18n.FromRequest(rq)
-
 //line views/readers.qtpl:17
 	qw422016.N().S(`
-<div class="layout">
+`)
+//line views/readers.qtpl:19
+	lc := l18n.FromRequest(rq)
+
+//line views/readers.qtpl:20
+	qw422016.N().S(`
 <main class="main-width media-tab">
 	<h1>`)
-//line views/readers.qtpl:20
+//line views/readers.qtpl:22
 	qw422016.N().S(lc.Get("ui.media_title", &l18n.Replacements{"name": beautifulLink(h.CanonicalName())}))
-//line views/readers.qtpl:20
+//line views/readers.qtpl:22
 	qw422016.N().S(`</h1>
 	`)
-//line views/readers.qtpl:21
+//line views/readers.qtpl:23
 	switch h.(type) {
-//line views/readers.qtpl:22
+//line views/readers.qtpl:24
 	case *hyphae.MediaHypha:
-//line views/readers.qtpl:22
+//line views/readers.qtpl:24
 		qw422016.N().S(`
 		<p class="explanation">`)
-//line views/readers.qtpl:23
+//line views/readers.qtpl:25
 		qw422016.E().S(lc.Get("ui.media_tip"))
-//line views/readers.qtpl:23
+//line views/readers.qtpl:25
 		qw422016.N().S(` <a href="/help/en/media" class="shy-link">`)
-//line views/readers.qtpl:23
+//line views/readers.qtpl:25
 		qw422016.E().S(lc.Get("ui.media_what_is"))
-//line views/readers.qtpl:23
+//line views/readers.qtpl:25
 		qw422016.N().S(`</a></p>
 	`)
-//line views/readers.qtpl:24
+//line views/readers.qtpl:26
 	default:
-//line views/readers.qtpl:24
+//line views/readers.qtpl:26
 		qw422016.N().S(`
 		<p class="explanation">`)
-//line views/readers.qtpl:25
+//line views/readers.qtpl:27
 		qw422016.E().S(lc.Get("ui.media_empty"))
-//line views/readers.qtpl:25
+//line views/readers.qtpl:27
 		qw422016.N().S(` <a href="/help/en/media" class="shy-link">`)
-//line views/readers.qtpl:25
+//line views/readers.qtpl:27
 		qw422016.E().S(lc.Get("ui.media_what_is"))
-//line views/readers.qtpl:25
+//line views/readers.qtpl:27
 		qw422016.N().S(`</a></p>
 	`)
-//line views/readers.qtpl:26
+//line views/readers.qtpl:28
 	}
-//line views/readers.qtpl:26
+//line views/readers.qtpl:28
 	qw422016.N().S(`
 
 	<section class="amnt-grid">
 	`)
-//line views/readers.qtpl:29
+//line views/readers.qtpl:31
 	switch h := h.(type) {
-//line views/readers.qtpl:30
+//line views/readers.qtpl:32
 	case *hyphae.MediaHypha:
-//line views/readers.qtpl:30
+//line views/readers.qtpl:32
 		qw422016.N().S(`
 		`)
-//line views/readers.qtpl:32
+//line views/readers.qtpl:34
 		mime := mimetype.FromExtension(path.Ext(h.MediaFilePath()))
 		fileinfo, err := os.Stat(h.MediaFilePath())
 
-//line views/readers.qtpl:33
+//line views/readers.qtpl:35
 		qw422016.N().S(`
 		`)
-//line views/readers.qtpl:34
+//line views/readers.qtpl:36
 		if err == nil {
-//line views/readers.qtpl:34
+//line views/readers.qtpl:36
 			qw422016.N().S(`
 		<fieldset class="amnt-menu-block">
 			<legend class="modal__title modal__title_small">`)
-//line views/readers.qtpl:36
+//line views/readers.qtpl:38
 			qw422016.E().S(lc.Get("ui.media_stat"))
-//line views/readers.qtpl:36
+//line views/readers.qtpl:38
 			qw422016.N().S(`</legend>
 			<p class="modal__confirmation-msg"><b>`)
-//line views/readers.qtpl:37
+//line views/readers.qtpl:39
 			qw422016.E().S(lc.Get("ui.media_stat_size"))
-//line views/readers.qtpl:37
+//line views/readers.qtpl:39
 			qw422016.N().S(`</b> `)
-//line views/readers.qtpl:37
+//line views/readers.qtpl:39
 			qw422016.E().S(lc.GetPlural64("ui.media_size_value", fileinfo.Size()))
-//line views/readers.qtpl:37
+//line views/readers.qtpl:39
 			qw422016.N().S(`</p>
 			<p><b>`)
-//line views/readers.qtpl:38
+//line views/readers.qtpl:40
 			qw422016.E().S(lc.Get("ui.media_stat_mime"))
-//line views/readers.qtpl:38
+//line views/readers.qtpl:40
 			qw422016.N().S(`</b> `)
-//line views/readers.qtpl:38
+//line views/readers.qtpl:40
 			qw422016.E().S(mime)
-//line views/readers.qtpl:38
+//line views/readers.qtpl:40
 			qw422016.N().S(`</p>
 		</fieldset>
 		`)
-//line views/readers.qtpl:40
+//line views/readers.qtpl:42
 		}
-//line views/readers.qtpl:40
+//line views/readers.qtpl:42
 		qw422016.N().S(`
 
 		`)
-//line views/readers.qtpl:42
+//line views/readers.qtpl:44
 		if strings.HasPrefix(mime, "image/") {
-//line views/readers.qtpl:42
+//line views/readers.qtpl:44
 			qw422016.N().S(`
 		<fieldset class="amnt-menu-block">
 			<legend class="modal__title modal__title_small">`)
-//line views/readers.qtpl:44
+//line views/readers.qtpl:46
 			qw422016.E().S(lc.Get("ui.media_include"))
-//line views/readers.qtpl:44
+//line views/readers.qtpl:46
 			qw422016.N().S(`</legend>
 			<p class="modal__confirmation-msg">`)
-//line views/readers.qtpl:45
+//line views/readers.qtpl:47
 			qw422016.E().S(lc.Get("ui.media_include_tip"))
-//line views/readers.qtpl:45
+//line views/readers.qtpl:47
 			qw422016.N().S(`</p>
 			<pre class="codeblock"><code>img { `)
-//line views/readers.qtpl:46
+//line views/readers.qtpl:48
 			qw422016.E().S(h.CanonicalName())
-//line views/readers.qtpl:46
+//line views/readers.qtpl:48
 			qw422016.N().S(` }</code></pre>
 		</fieldset>
 		`)
-//line views/readers.qtpl:48
+//line views/readers.qtpl:50
 		}
-//line views/readers.qtpl:48
+//line views/readers.qtpl:50
 		qw422016.N().S(`
 	`)
-//line views/readers.qtpl:49
+//line views/readers.qtpl:51
 	}
-//line views/readers.qtpl:49
+//line views/readers.qtpl:51
 	qw422016.N().S(`
 
 	`)
-//line views/readers.qtpl:51
+//line views/readers.qtpl:53
 	if u.CanProceed("upload-binary") {
-//line views/readers.qtpl:51
+//line views/readers.qtpl:53
 		qw422016.N().S(`
 	<form action="/upload-binary/`)
-//line views/readers.qtpl:52
+//line views/readers.qtpl:54
 		qw422016.E().S(h.CanonicalName())
-//line views/readers.qtpl:52
+//line views/readers.qtpl:54
 		qw422016.N().S(`"
 			method="post" enctype="multipart/form-data"
 			class="upload-binary modal amnt-menu-block">
 		<fieldset class="modal__fieldset">
 			<legend class="modal__title modal__title_small">`)
-//line views/readers.qtpl:56
+//line views/readers.qtpl:58
 		qw422016.E().S(lc.Get("ui.media_new"))
-//line views/readers.qtpl:56
+//line views/readers.qtpl:58
 		qw422016.N().S(`</legend>
 			<p class="modal__confirmation-msg">`)
-//line views/readers.qtpl:57
+//line views/readers.qtpl:59
 		qw422016.E().S(lc.Get("ui.media_new_tip"))
-//line views/readers.qtpl:57
+//line views/readers.qtpl:59
 		qw422016.N().S(`</p>
 			<label for="upload-binary__input"></label>
 			<input type="file" id="upload-binary__input" name="binary">
 
 			<button type="submit" class="btn stick-to-bottom" value="Upload">`)
-//line views/readers.qtpl:61
+//line views/readers.qtpl:63
 		qw422016.E().S(lc.Get("ui.media_upload"))
-//line views/readers.qtpl:61
+//line views/readers.qtpl:63
 		qw422016.N().S(`</button>
 		</fieldset>
 	</form>
 	`)
-//line views/readers.qtpl:64
+//line views/readers.qtpl:66
 	}
-//line views/readers.qtpl:64
+//line views/readers.qtpl:66
 	qw422016.N().S(`
 
 
 	`)
-//line views/readers.qtpl:67
+//line views/readers.qtpl:69
 	switch h := h.(type) {
-//line views/readers.qtpl:68
+//line views/readers.qtpl:70
 	case *hyphae.MediaHypha:
-//line views/readers.qtpl:68
+//line views/readers.qtpl:70
 		qw422016.N().S(`
 		`)
-//line views/readers.qtpl:69
+//line views/readers.qtpl:71
 		if u.CanProceed("remove-media") {
-//line views/readers.qtpl:69
+//line views/readers.qtpl:71
 			qw422016.N().S(`
 		<form action="/remove-media/`)
-//line views/readers.qtpl:70
+//line views/readers.qtpl:72
 			qw422016.E().S(h.CanonicalName())
-//line views/readers.qtpl:70
+//line views/readers.qtpl:72
 			qw422016.N().S(`" method="post" class="modal amnt-menu-block" method="POST">
 			<fieldset class="modal__fieldset">
 				<legend class="modal__title modal__title_small">`)
-//line views/readers.qtpl:72
+//line views/readers.qtpl:74
 			qw422016.E().S(lc.Get("ui.media_remove"))
-//line views/readers.qtpl:72
+//line views/readers.qtpl:74
 			qw422016.N().S(`</legend>
 				<p class="modal__confirmation-msg">`)
-//line views/readers.qtpl:73
+//line views/readers.qtpl:75
 			qw422016.E().S(lc.Get("ui.media_remove_tip"))
-//line views/readers.qtpl:73
+//line views/readers.qtpl:75
 			qw422016.N().S(`</p>
 				<button type="submit" class="btn" value="Remove media">`)
-//line views/readers.qtpl:74
+//line views/readers.qtpl:76
 			qw422016.E().S(lc.Get("ui.media_remove_button"))
-//line views/readers.qtpl:74
+//line views/readers.qtpl:76
 			qw422016.N().S(`</button>
 			</fieldset>
 		</form>
 		`)
-//line views/readers.qtpl:77
+//line views/readers.qtpl:79
 		}
-//line views/readers.qtpl:77
+//line views/readers.qtpl:79
 		qw422016.N().S(`
 	`)
-//line views/readers.qtpl:78
+//line views/readers.qtpl:80
 	}
-//line views/readers.qtpl:78
+//line views/readers.qtpl:80
 	qw422016.N().S(`
 
 	</section>
 </main>
-</div>
 `)
-//line views/readers.qtpl:83
+//line views/readers.qtpl:84
 }
 
-//line views/readers.qtpl:83
+//line views/readers.qtpl:84
 func WriteMediaMenu(qq422016 qtio422016.Writer, rq *http.Request, h hyphae.Hypha, u *user.User) {
-//line views/readers.qtpl:83
+//line views/readers.qtpl:84
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line views/readers.qtpl:83
+//line views/readers.qtpl:84
 	StreamMediaMenu(qw422016, rq, h, u)
-//line views/readers.qtpl:83
+//line views/readers.qtpl:84
 	qt422016.ReleaseWriter(qw422016)
-//line views/readers.qtpl:83
+//line views/readers.qtpl:84
 }
 
-//line views/readers.qtpl:83
+//line views/readers.qtpl:84
 func MediaMenu(rq *http.Request, h hyphae.Hypha, u *user.User) string {
-//line views/readers.qtpl:83
+//line views/readers.qtpl:84
 	qb422016 := qt422016.AcquireByteBuffer()
-//line views/readers.qtpl:83
+//line views/readers.qtpl:84
 	WriteMediaMenu(qb422016, rq, h, u)
-//line views/readers.qtpl:83
+//line views/readers.qtpl:84
 	qs422016 := string(qb422016.B)
-//line views/readers.qtpl:83
+//line views/readers.qtpl:84
 	qt422016.ReleaseByteBuffer(qb422016)
-//line views/readers.qtpl:83
+//line views/readers.qtpl:84
 	return qs422016
-//line views/readers.qtpl:83
+//line views/readers.qtpl:84
 }
 
 // If `contents` == "", a helpful message is shown instead.
 //
 // If you rename .prevnext, change the docs too.
 
-//line views/readers.qtpl:88
-func StreamHypha(qw422016 *qt422016.Writer, meta Meta, h hyphae.Hypha, contents string) {
-//line views/readers.qtpl:88
+//line views/readers.qtpl:89
+func StreamHypha(qw422016 *qt422016.Writer, meta viewutil.Meta, h hyphae.Hypha, contents string) {
+//line views/readers.qtpl:89
 	qw422016.N().S(`
 `)
-//line views/readers.qtpl:90
+//line views/readers.qtpl:91
 	siblings, subhyphae, prevHyphaName, nextHyphaName := tree.Tree(h.CanonicalName())
 	lc := meta.Lc
 
-//line views/readers.qtpl:92
+//line views/readers.qtpl:93
 	qw422016.N().S(`
-<div class="layout">
 <main class="main-width">
 	<section id="hypha">
 		`)
@@ -383,7 +389,7 @@ func StreamHypha(qw422016 *qt422016.Writer, meta Meta, h hyphae.Hypha, contents 
 
 		`)
 //line views/readers.qtpl:113
-	qw422016.N().S(NaviTitle(h))
+	qw422016.N().S(hypview.NaviTitle(meta, h.CanonicalName()))
 //line views/readers.qtpl:113
 	qw422016.N().S(`
 		`)
@@ -395,7 +401,7 @@ func StreamHypha(qw422016 *qt422016.Writer, meta Meta, h hyphae.Hypha, contents 
 		qw422016.N().S(`
 				`)
 //line views/readers.qtpl:116
-		streamnonExistentHyphaNotice(qw422016, h, meta.U, meta.Lc)
+		qw422016.N().S(hypview.EmptyHypha(meta, h.CanonicalName()))
 //line views/readers.qtpl:116
 		qw422016.N().S(`
 			`)
@@ -456,180 +462,215 @@ func StreamHypha(qw422016 *qt422016.Writer, meta Meta, h hyphae.Hypha, contents 
 	</section>
 `)
 //line views/readers.qtpl:129
-	StreamSubhyphae(qw422016, subhyphae, meta.Lc)
+	if strings.TrimSpace(subhyphae) != "" {
 //line views/readers.qtpl:129
+		qw422016.N().S(`
+<section class="subhyphae">
+	<h2 class="subhyphae__title">`)
+//line views/readers.qtpl:131
+		qw422016.E().S(lc.Get("ui.subhyphae"))
+//line views/readers.qtpl:131
+		qw422016.N().S(`</h2>
+	<nav class="subhyphae__nav">
+		<ul class="subhyphae__list">
+		`)
+//line views/readers.qtpl:134
+		qw422016.N().S(subhyphae)
+//line views/readers.qtpl:134
+		qw422016.N().S(`
+		</ul>
+	</nav>
+</section>
+`)
+//line views/readers.qtpl:138
+	}
+//line views/readers.qtpl:138
 	qw422016.N().S(`
 	<section id="hypha-bottom">
    		`)
-//line views/readers.qtpl:131
+//line views/readers.qtpl:140
 	streamhyphaInfo(qw422016, meta, h)
-//line views/readers.qtpl:131
+//line views/readers.qtpl:140
 	qw422016.N().S(`
 	</section>
 </main>
 `)
-//line views/readers.qtpl:134
-	qw422016.N().S(categoryCard(meta, h.CanonicalName()))
-//line views/readers.qtpl:134
+//line views/readers.qtpl:143
+	qw422016.N().S(categories.CategoryCard(meta, h.CanonicalName()))
+//line views/readers.qtpl:143
 	qw422016.N().S(`
 `)
-//line views/readers.qtpl:135
-	streamsiblingHyphae(qw422016, siblings, meta.Lc)
-//line views/readers.qtpl:135
-	qw422016.N().S(`
-</div>
+//line views/readers.qtpl:144
+	if cfg.UseSiblingHyphaeSidebar {
+//line views/readers.qtpl:144
+		qw422016.N().S(`
+<aside class="sibling-hyphae layout-card">
+	<h2 class="sibling-hyphae__title layout-card__title">`)
+//line views/readers.qtpl:146
+		qw422016.E().S(lc.Get("ui.sibling_hyphae"))
+//line views/readers.qtpl:146
+		qw422016.N().S(`</h2>
+	`)
+//line views/readers.qtpl:147
+		qw422016.N().S(siblings)
+//line views/readers.qtpl:147
+		qw422016.N().S(`
+</aside>
 `)
-//line views/readers.qtpl:137
+//line views/readers.qtpl:149
+	}
+//line views/readers.qtpl:149
+	qw422016.N().S(`
+`)
+//line views/readers.qtpl:150
 	streamviewScripts(qw422016)
-//line views/readers.qtpl:137
+//line views/readers.qtpl:150
 	qw422016.N().S(`
 `)
-//line views/readers.qtpl:138
+//line views/readers.qtpl:151
 }
 
-//line views/readers.qtpl:138
-func WriteHypha(qq422016 qtio422016.Writer, meta Meta, h hyphae.Hypha, contents string) {
-//line views/readers.qtpl:138
+//line views/readers.qtpl:151
+func WriteHypha(qq422016 qtio422016.Writer, meta viewutil.Meta, h hyphae.Hypha, contents string) {
+//line views/readers.qtpl:151
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line views/readers.qtpl:138
+//line views/readers.qtpl:151
 	StreamHypha(qw422016, meta, h, contents)
-//line views/readers.qtpl:138
+//line views/readers.qtpl:151
 	qt422016.ReleaseWriter(qw422016)
-//line views/readers.qtpl:138
+//line views/readers.qtpl:151
 }
 
-//line views/readers.qtpl:138
-func Hypha(meta Meta, h hyphae.Hypha, contents string) string {
-//line views/readers.qtpl:138
+//line views/readers.qtpl:151
+func Hypha(meta viewutil.Meta, h hyphae.Hypha, contents string) string {
+//line views/readers.qtpl:151
 	qb422016 := qt422016.AcquireByteBuffer()
-//line views/readers.qtpl:138
+//line views/readers.qtpl:151
 	WriteHypha(qb422016, meta, h, contents)
-//line views/readers.qtpl:138
+//line views/readers.qtpl:151
 	qs422016 := string(qb422016.B)
-//line views/readers.qtpl:138
+//line views/readers.qtpl:151
 	qt422016.ReleaseByteBuffer(qb422016)
-//line views/readers.qtpl:138
+//line views/readers.qtpl:151
 	return qs422016
-//line views/readers.qtpl:138
+//line views/readers.qtpl:151
 }
 
-//line views/readers.qtpl:140
-func StreamRevision(qw422016 *qt422016.Writer, rq *http.Request, lc *l18n.Localizer, h hyphae.Hypha, contents, revHash string) {
-//line views/readers.qtpl:140
+//line views/readers.qtpl:153
+func StreamRevision(qw422016 *qt422016.Writer, meta viewutil.Meta, h hyphae.Hypha, contents, revHash string) {
+//line views/readers.qtpl:153
 	qw422016.N().S(`
-<div class="layout">
 <main class="main-width">
 	<section>
 		<p>`)
-//line views/readers.qtpl:144
-	qw422016.E().S(lc.Get("ui.revision_warning"))
-//line views/readers.qtpl:144
+//line views/readers.qtpl:156
+	qw422016.E().S(meta.Lc.Get("ui.revision_warning"))
+//line views/readers.qtpl:156
 	qw422016.N().S(` <a href="/rev-text/`)
-//line views/readers.qtpl:144
+//line views/readers.qtpl:156
 	qw422016.E().S(revHash)
-//line views/readers.qtpl:144
+//line views/readers.qtpl:156
 	qw422016.N().S(`/`)
-//line views/readers.qtpl:144
+//line views/readers.qtpl:156
 	qw422016.E().S(h.CanonicalName())
-//line views/readers.qtpl:144
+//line views/readers.qtpl:156
 	qw422016.N().S(`">`)
-//line views/readers.qtpl:144
-	qw422016.E().S(lc.Get("ui.revision_link"))
-//line views/readers.qtpl:144
+//line views/readers.qtpl:156
+	qw422016.E().S(meta.Lc.Get("ui.revision_link"))
+//line views/readers.qtpl:156
 	qw422016.N().S(`</a></p>
 		`)
-//line views/readers.qtpl:145
-	qw422016.N().S(NaviTitle(h))
-//line views/readers.qtpl:145
+//line views/readers.qtpl:157
+	qw422016.N().S(hypview.NaviTitle(meta, h.CanonicalName()))
+//line views/readers.qtpl:157
 	qw422016.N().S(`
 		`)
-//line views/readers.qtpl:146
+//line views/readers.qtpl:158
 	qw422016.N().S(contents)
-//line views/readers.qtpl:146
+//line views/readers.qtpl:158
 	qw422016.N().S(`
 	</section>
 </main>
-</div>
 `)
-//line views/readers.qtpl:150
+//line views/readers.qtpl:161
 	streamviewScripts(qw422016)
-//line views/readers.qtpl:150
+//line views/readers.qtpl:161
 	qw422016.N().S(`
 `)
-//line views/readers.qtpl:151
+//line views/readers.qtpl:162
 }
 
-//line views/readers.qtpl:151
-func WriteRevision(qq422016 qtio422016.Writer, rq *http.Request, lc *l18n.Localizer, h hyphae.Hypha, contents, revHash string) {
-//line views/readers.qtpl:151
+//line views/readers.qtpl:162
+func WriteRevision(qq422016 qtio422016.Writer, meta viewutil.Meta, h hyphae.Hypha, contents, revHash string) {
+//line views/readers.qtpl:162
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line views/readers.qtpl:151
-	StreamRevision(qw422016, rq, lc, h, contents, revHash)
-//line views/readers.qtpl:151
+//line views/readers.qtpl:162
+	StreamRevision(qw422016, meta, h, contents, revHash)
+//line views/readers.qtpl:162
 	qt422016.ReleaseWriter(qw422016)
-//line views/readers.qtpl:151
+//line views/readers.qtpl:162
 }
 
-//line views/readers.qtpl:151
-func Revision(rq *http.Request, lc *l18n.Localizer, h hyphae.Hypha, contents, revHash string) string {
-//line views/readers.qtpl:151
+//line views/readers.qtpl:162
+func Revision(meta viewutil.Meta, h hyphae.Hypha, contents, revHash string) string {
+//line views/readers.qtpl:162
 	qb422016 := qt422016.AcquireByteBuffer()
-//line views/readers.qtpl:151
-	WriteRevision(qb422016, rq, lc, h, contents, revHash)
-//line views/readers.qtpl:151
+//line views/readers.qtpl:162
+	WriteRevision(qb422016, meta, h, contents, revHash)
+//line views/readers.qtpl:162
 	qs422016 := string(qb422016.B)
-//line views/readers.qtpl:151
+//line views/readers.qtpl:162
 	qt422016.ReleaseByteBuffer(qb422016)
-//line views/readers.qtpl:151
+//line views/readers.qtpl:162
 	return qs422016
-//line views/readers.qtpl:151
+//line views/readers.qtpl:162
 }
 
-//line views/readers.qtpl:153
+//line views/readers.qtpl:164
 func streamviewScripts(qw422016 *qt422016.Writer) {
-//line views/readers.qtpl:153
+//line views/readers.qtpl:164
 	qw422016.N().S(`
 `)
-//line views/readers.qtpl:154
+//line views/readers.qtpl:165
 	for _, scriptPath := range cfg.ViewScripts {
-//line views/readers.qtpl:154
+//line views/readers.qtpl:165
 		qw422016.N().S(`
 <script src="`)
-//line views/readers.qtpl:155
+//line views/readers.qtpl:166
 		qw422016.E().S(scriptPath)
-//line views/readers.qtpl:155
+//line views/readers.qtpl:166
 		qw422016.N().S(`"></script>
 `)
-//line views/readers.qtpl:156
+//line views/readers.qtpl:167
 	}
-//line views/readers.qtpl:156
+//line views/readers.qtpl:167
 	qw422016.N().S(`
 `)
-//line views/readers.qtpl:157
+//line views/readers.qtpl:168
 }
 
-//line views/readers.qtpl:157
+//line views/readers.qtpl:168
 func writeviewScripts(qq422016 qtio422016.Writer) {
-//line views/readers.qtpl:157
+//line views/readers.qtpl:168
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line views/readers.qtpl:157
+//line views/readers.qtpl:168
 	streamviewScripts(qw422016)
-//line views/readers.qtpl:157
+//line views/readers.qtpl:168
 	qt422016.ReleaseWriter(qw422016)
-//line views/readers.qtpl:157
+//line views/readers.qtpl:168
 }
 
-//line views/readers.qtpl:157
+//line views/readers.qtpl:168
 func viewScripts() string {
-//line views/readers.qtpl:157
+//line views/readers.qtpl:168
 	qb422016 := qt422016.AcquireByteBuffer()
-//line views/readers.qtpl:157
+//line views/readers.qtpl:168
 	writeviewScripts(qb422016)
-//line views/readers.qtpl:157
+//line views/readers.qtpl:168
 	qs422016 := string(qb422016.B)
-//line views/readers.qtpl:157
+//line views/readers.qtpl:168
 	qt422016.ReleaseByteBuffer(qb422016)
-//line views/readers.qtpl:157
+//line views/readers.qtpl:168
 	return qs422016
-//line views/readers.qtpl:157
+//line views/readers.qtpl:168
 }

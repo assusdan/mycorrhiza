@@ -5,17 +5,19 @@
 
 {% import "github.com/bouncepaw/mycorrhiza/cfg" %}
 {% import "github.com/bouncepaw/mycorrhiza/hyphae" %}
+{% import "github.com/bouncepaw/mycorrhiza/hypview" %}
+{% import "github.com/bouncepaw/mycorrhiza/categories" %}
 {% import "github.com/bouncepaw/mycorrhiza/l18n" %}
 {% import "github.com/bouncepaw/mycorrhiza/mimetype" %}
 {% import "github.com/bouncepaw/mycorrhiza/tree" %}
 {% import "github.com/bouncepaw/mycorrhiza/user" %}
 {% import "github.com/bouncepaw/mycorrhiza/util" %}
+{% import "github.com/bouncepaw/mycorrhiza/viewutil" %}
 
 {% func MediaMenu(rq *http.Request, h hyphae.Hypha, u *user.User) %}
 {% code
 	lc := l18n.FromRequest(rq)
 %}
-<div class="layout">
 <main class="main-width media-tab">
 	<h1>{%s= lc.Get("ui.media_title", &l18n.Replacements{"name": beautifulLink(h.CanonicalName())}) %}</h1>
 	{% switch h.(type) %}
@@ -79,18 +81,16 @@
 
 	</section>
 </main>
-</div>
 {% endfunc %}
 
 If `contents` == "", a helpful message is shown instead.
 
 If you rename .prevnext, change the docs too.
-{% func Hypha(meta Meta, h hyphae.Hypha, contents string) %}
+{% func Hypha(meta viewutil.Meta, h hyphae.Hypha, contents string) %}
 {% code
 	siblings, subhyphae, prevHyphaName, nextHyphaName := tree.Tree(h.CanonicalName())
 	lc := meta.Lc
 %}
-<div class="layout">
 <main class="main-width">
 	<section id="hypha">
 		{% if meta.U.CanProceed("edit") %}
@@ -110,10 +110,10 @@ If you rename .prevnext, change the docs too.
 		{% endif %}
 		{% endif %}
 
-		{%s= NaviTitle(h) %}
+		{%s= hypview.NaviTitle(meta, h.CanonicalName()) %}
 		{% switch h.(type) %}
 			{% case *hyphae.EmptyHypha %}
-				{%= nonExistentHyphaNotice(h, meta.U, meta.Lc) %}
+				{%s= hypview.EmptyHypha(meta, h.CanonicalName()) %}
 			{% default %}
 				{%s= contents %}
 		{% endswitch %}
@@ -126,27 +126,38 @@ If you rename .prevnext, change the docs too.
 		<a class="prevnext__el prevnext__next" href="/hypha/{%s nextHyphaName %}" rel="next">{%s util.BeautifulName(path.Base(nextHyphaName)) %} →</a>
 		{% endif %}
 	</section>
-{%= Subhyphae(subhyphae, meta.Lc) %}
+{% if strings.TrimSpace(subhyphae) != "" %}
+<section class="subhyphae">
+	<h2 class="subhyphae__title">{%s lc.Get("ui.subhyphae") %}</h2>
+	<nav class="subhyphae__nav">
+		<ul class="subhyphae__list">
+		{%s= subhyphae %}
+		</ul>
+	</nav>
+</section>
+{% endif %}
 	<section id="hypha-bottom">
    		{%= hyphaInfo(meta, h) %}
 	</section>
 </main>
-{%s= categoryCard(meta, h.CanonicalName()) %}
-{%= siblingHyphae(siblings, meta.Lc) %}
-</div>
+{%s= categories.CategoryCard(meta, h.CanonicalName()) %}
+{% if cfg.UseSiblingHyphaeSidebar %}
+<aside class="sibling-hyphae layout-card">
+	<h2 class="sibling-hyphae__title layout-card__title">{%s lc.Get("ui.sibling_hyphae") %}</h2>
+	{%s= siblings %}
+</aside>
+{% endif %}
 {%= viewScripts() %}
 {% endfunc %}
 
-{% func Revision(rq *http.Request, lc *l18n.Localizer, h hyphae.Hypha, contents, revHash string) %}
-<div class="layout">
+{% func Revision(meta viewutil.Meta, h hyphae.Hypha, contents, revHash string) %}
 <main class="main-width">
 	<section>
-		<p>{%s lc.Get("ui.revision_warning") %} <a href="/rev-text/{%s revHash %}/{%s h.CanonicalName() %}">{%s lc.Get("ui.revision_link") %}</a></p>
-		{%s= NaviTitle(h) %}
+		<p>{%s meta.Lc.Get("ui.revision_warning") %} <a href="/rev-text/{%s revHash %}/{%s h.CanonicalName() %}">{%s meta.Lc.Get("ui.revision_link") %}</a></p>
+		{%s= hypview.NaviTitle(meta, h.CanonicalName()) %}
 		{%s= contents %}
 	</section>
 </main>
-</div>
 {%= viewScripts() %}
 {% endfunc %}
 

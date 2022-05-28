@@ -2,8 +2,7 @@ package shroom
 
 import (
 	"fmt"
-	"github.com/bouncepaw/mycorrhiza/hyphae/backlinks"
-
+	"github.com/bouncepaw/mycorrhiza/backlinks"
 	"github.com/bouncepaw/mycorrhiza/history"
 	"github.com/bouncepaw/mycorrhiza/hyphae"
 	"github.com/bouncepaw/mycorrhiza/user"
@@ -19,7 +18,11 @@ func Delete(u *user.User, h hyphae.ExistingHypha) error {
 	originalText, _ := FetchTextFile(h)
 	switch h := h.(type) {
 	case *hyphae.MediaHypha:
-		hop.WithFilesRemoved(h.MediaFilePath(), h.TextFilePath())
+		if h.HasTextFile() {
+			hop.WithFilesRemoved(h.MediaFilePath(), h.TextFilePath())
+		} else {
+			hop.WithFilesRemoved(h.MediaFilePath())
+		}
 	case *hyphae.TextualHypha:
 		hop.WithFilesRemoved(h.TextFilePath())
 	}

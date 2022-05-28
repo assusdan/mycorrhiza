@@ -1,8 +1,10 @@
 package web
 
 import (
-	"encoding/hex"
 	"fmt"
+	"github.com/bouncepaw/mycomarkup/v4"
+	"github.com/bouncepaw/mycorrhiza/shroom"
+	"github.com/bouncepaw/mycorrhiza/viewutil"
 	"io"
 	"log"
 	"net/http"
@@ -12,7 +14,6 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/bouncepaw/mycorrhiza/cfg"
 	"github.com/bouncepaw/mycorrhiza/history"
 	"github.com/bouncepaw/mycorrhiza/hyphae"
 	"github.com/bouncepaw/mycorrhiza/l18n"
@@ -21,9 +22,8 @@ import (
 	"github.com/bouncepaw/mycorrhiza/util"
 	"github.com/bouncepaw/mycorrhiza/views"
 
-	"github.com/bouncepaw/mycomarkup/v3"
-	"github.com/bouncepaw/mycomarkup/v3/mycocontext"
-	"github.com/bouncepaw/mycomarkup/v3/tools"
+	"github.com/bouncepaw/mycomarkup/v4/mycocontext"
+	"github.com/bouncepaw/mycomarkup/v4/tools"
 )
 
 func initReaders(r *mux.Router) {
@@ -33,7 +33,6 @@ func initReaders(r *mux.Router) {
 	r.PathPrefix("/binary/").HandlerFunc(handlerBinary)
 	r.PathPrefix("/rev/").HandlerFunc(handlerRevision)
 	r.PathPrefix("/rev-text/").HandlerFunc(handlerRevisionText)
-	r.PathPrefix("/primitive-diff/").HandlerFunc(handlerPrimitiveDiff)
 	r.PathPrefix("/media/").HandlerFunc(handlerMedia)
 }
 
@@ -47,43 +46,9 @@ func handlerMedia(w http.ResponseWriter, rq *http.Request) {
 	)
 	util.HTTP200Page(w,
 		views.Base(
+			viewutil.MetaFrom(w, rq),
 			lc.Get("ui.media_title", &l18n.Replacements{"name": util.BeautifulName(hyphaName)}),
-			views.MediaMenu(rq, h, u),
-			lc,
-			u))
-}
-
-func handlerPrimitiveDiff(w http.ResponseWriter, rq *http.Request) {
-	util.PrepareRq(rq)
-	shorterURL := strings.TrimPrefix(rq.URL.Path, "/primitive-diff/")
-	revHash, slug, found := strings.Cut(shorterURL, "/")
-	if !found || len(revHash) < 7 || len(slug) < 1 {
-		http.Error(w, "403 bad request", http.StatusBadRequest)
-		return
-	}
-	paddedRevHash := revHash
-	if len(paddedRevHash)%2 != 0 {
-		paddedRevHash = paddedRevHash[:len(paddedRevHash)-1]
-	}
-	if _, err := hex.DecodeString(paddedRevHash); err != nil {
-		http.Error(w, "403 bad request", http.StatusBadRequest)
-		return
-	}
-	var (
-		hyphaName = util.CanonicalName(slug)
-		h         = hyphae.ByName(hyphaName)
-		user      = user.FromRequest(rq)
-		locale    = l18n.FromRequest(rq)
-	)
-	switch h := h.(type) {
-	case *hyphae.EmptyHypha:
-		w.WriteHeader(http.StatusNotFound)
-		io.WriteString(w, "404 not found")
-	case hyphae.ExistingHypha:
-		util.HTTP200Page(w, views.Base(
-			locale.Get("ui.diff_title", &l18n.Replacements{"name": util.BeautifulName(hyphaName), "rev": revHash}),
-			views.PrimitiveDiff(rq, h, user, revHash), locale, user))
-	}
+			views.MediaMenu(rq, h, u)))
 }
 
 // handlerRevisionText sends Mycomarkup text of the hypha at the given revision. See also: handlerRevision, handlerText.
@@ -133,20 +98,18 @@ func handlerRevision(w http.ResponseWriter, rq *http.Request) {
 		hyphaName       = util.CanonicalName(shorterURL[firstSlashIndex+1:])
 		h               = hyphae.ByName(hyphaName)
 		contents        = fmt.Sprintf(`<p>%s</p>`, lc.Get("ui.revision_no_text"))
-		u               = user.FromRequest(rq)
 	)
 	switch h := h.(type) {
 	case hyphae.ExistingHypha:
 		var textContents, err = history.FileAtRevision(h.TextFilePath(), revHash)
 
 		if err == nil {
-			ctx, _ := mycocontext.ContextFromStringInput(hyphaName, textContents)
+			ctx, _ := mycocontext.ContextFromStringInput(textContents, shroom.MarkupOptions(hyphaName))
 			contents = mycomarkup.BlocksToHTML(ctx, mycomarkup.BlockTree(ctx))
 		}
 	}
 	page := views.Revision(
-		rq,
-		lc,
+		viewutil.MetaFrom(w, rq),
 		h,
 		contents,
 		revHash,
@@ -156,10 +119,9 @@ func handlerRevision(w http.ResponseWriter, rq *http.Request) {
 	_, _ = fmt.Fprint(
 		w,
 		views.Base(
+			viewutil.MetaFrom(w, rq),
 			lc.Get("ui.revision_title", &l18n.Replacements{"name": util.BeautifulName(hyphaName), "rev": revHash}),
 			page,
-			lc,
-			u,
 		),
 	)
 }
@@ -200,7 +162,6 @@ func handlerHypha(w http.ResponseWriter, rq *http.Request) {
 		h         = hyphae.ByName(hyphaName)
 		contents  string
 		openGraph string
-		u         = user.FromRequest(rq)
 		lc        = l18n.FromRequest(rq)
 	)
 
@@ -208,16 +169,14 @@ func handlerHypha(w http.ResponseWriter, rq *http.Request) {
 	case *hyphae.EmptyHypha:
 		util.HTTP404Page(w,
 			views.Base(
+				viewutil.MetaFrom(w, rq),
 				util.BeautifulName(hyphaName),
-				views.Hypha(views.MetaFrom(w, rq), h, contents),
-				lc,
-				u,
+				views.Hypha(viewutil.MetaFrom(w, rq), h, contents),
 				openGraph))
 	case hyphae.ExistingHypha:
 		fileContentsT, errT := os.ReadFile(h.TextFilePath())
 		if errT == nil {
-			ctx, _ := mycocontext.ContextFromStringInput(hyphaName, string(fileContentsT))
-			ctx = mycocontext.WithWebSiteURL(ctx, cfg.URL)
+			ctx, _ := mycocontext.ContextFromStringInput(string(fileContentsT), shroom.MarkupOptions(hyphaName))
 			getOpenGraph, descVisitor, imgVisitor := tools.OpenGraphVisitors(ctx)
 			ast := mycomarkup.BlockTree(ctx, descVisitor, imgVisitor)
 			contents = mycomarkup.BlocksToHTML(ctx, ast)
@@ -230,10 +189,9 @@ func handlerHypha(w http.ResponseWriter, rq *http.Request) {
 
 		util.HTTP200Page(w,
 			views.Base(
+				viewutil.MetaFrom(w, rq),
 				util.BeautifulName(hyphaName),
-				views.Hypha(views.MetaFrom(w, rq), h, contents),
-				lc,
-				u,
+				views.Hypha(viewutil.MetaFrom(w, rq), h, contents),
 				openGraph))
 	}
 }

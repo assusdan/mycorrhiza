@@ -5,12 +5,13 @@
 package main
 
 import (
-	"github.com/bouncepaw/mycorrhiza/hyphae/categories"
+	"github.com/bouncepaw/mycorrhiza/backlinks"
+	"github.com/bouncepaw/mycorrhiza/categories"
+	"github.com/bouncepaw/mycorrhiza/interwiki"
 	"github.com/bouncepaw/mycorrhiza/migration"
+	"github.com/bouncepaw/mycorrhiza/viewutil"
 	"log"
 	"os"
-
-	"github.com/bouncepaw/mycorrhiza/hyphae/backlinks"
 
 	"github.com/bouncepaw/mycorrhiza/cfg"
 	"github.com/bouncepaw/mycorrhiza/files"
@@ -33,14 +34,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Println("Running Mycorrhiza Wiki 1.9.0")
+	log.Println("Running Mycorrhiza Wiki 1.10.0")
 	if err := os.Chdir(files.HyphaeDir()); err != nil {
 		log.Fatal(err)
 	}
 	log.Println("Wiki directory is", cfg.WikiDir)
-	log.Println("Using Git storage at", files.HyphaeDir())
 
 	// Init the subsystems:
+	viewutil.Init()
 	hyphae.Index(files.HyphaeDir())
 	backlinks.IndexBacklinks()
 	go backlinks.RunBacklinksConveyor()
@@ -48,8 +49,10 @@ func main() {
 	history.Start()
 	history.InitGitRepo()
 	migration.MigrateRocketsMaybe()
+	migration.MigrateHeadingsMaybe()
 	shroom.SetHeaderLinks()
-	categories.InitCategories()
+	categories.Init()
+	interwiki.Init()
 
 	// Static files:
 	static.InitFS(files.StaticFiles())

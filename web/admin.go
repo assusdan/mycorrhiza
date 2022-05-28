@@ -2,6 +2,8 @@ package web
 
 import (
 	"fmt"
+	"github.com/bouncepaw/mycorrhiza/admin"
+	"github.com/bouncepaw/mycorrhiza/viewutil"
 	"io"
 	"log"
 	"mime"
@@ -19,23 +21,23 @@ import (
 )
 
 // initAdmin sets up /admin routes if auth is used. Call it after you have decided if you want to use auth.
-func initAdmin(r *mux.Router) {
-	r.HandleFunc("/shutdown", handlerAdminShutdown).Methods(http.MethodPost)
-	r.HandleFunc("/reindex-users", handlerAdminReindexUsers).Methods(http.MethodPost)
+func initAdmin(rtr *mux.Router) {
+	rtr.HandleFunc("/shutdown", handlerAdminShutdown).Methods(http.MethodPost)
+	rtr.HandleFunc("/reindex-users", handlerAdminReindexUsers).Methods(http.MethodPost)
 
-	r.HandleFunc("/new-user", handlerAdminUserNew).Methods(http.MethodGet, http.MethodPost)
-	r.HandleFunc("/users/{username}/edit", handlerAdminUserEdit).Methods(http.MethodGet, http.MethodPost)
-	r.HandleFunc("/users/{username}/delete", handlerAdminUserDelete).Methods(http.MethodGet, http.MethodPost)
-	r.HandleFunc("/users", handlerAdminUsers)
+	rtr.HandleFunc("/new-user", handlerAdminUserNew).Methods(http.MethodGet, http.MethodPost)
+	rtr.HandleFunc("/users/{username}/edit", handlerAdminUserEdit).Methods(http.MethodGet, http.MethodPost)
+	rtr.HandleFunc("/users/{username}/delete", handlerAdminUserDelete).Methods(http.MethodGet, http.MethodPost)
+	rtr.HandleFunc("/users", handlerAdminUsers)
 
-	r.HandleFunc("/", handlerAdmin)
+	rtr.HandleFunc("/", handlerAdmin)
 }
 
 // handlerAdmin provides the admin panel.
 func handlerAdmin(w http.ResponseWriter, rq *http.Request) {
 	w.Header().Set("Content-Type", "text/html;charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	views.AdminPanel(views.MetaFrom(w, rq))
+	admin.AdminPanel(viewutil.MetaFrom(w, rq))
 }
 
 // handlerAdminShutdown kills the wiki.
@@ -70,7 +72,7 @@ func handlerAdminUsers(w http.ResponseWriter, rq *http.Request) {
 
 	var lc = l18n.FromRequest(rq)
 	html := views.AdminUsersPanel(userList, lc)
-	html = views.Base(lc.Get("admin.users_title"), html, lc, user.FromRequest(rq))
+	html = views.Base(viewutil.MetaFrom(w, rq), lc.Get("admin.users_title"), html)
 
 	w.Header().Set("Content-Type", mime.TypeByExtension(".html"))
 	io.WriteString(w, html)
@@ -109,7 +111,7 @@ func handlerAdminUserEdit(w http.ResponseWriter, rq *http.Request) {
 
 	var lc = l18n.FromRequest(rq)
 	html := views.AdminUserEdit(u, f, lc)
-	html = views.Base(fmt.Sprintf(lc.Get("admin.user_title"), u.Name), html, lc, user.FromRequest(rq))
+	html = views.Base(viewutil.MetaFrom(w, rq), fmt.Sprintf(lc.Get("admin.user_title"), u.Name), html)
 
 	if f.HasError() {
 		w.WriteHeader(http.StatusBadRequest)
@@ -139,7 +141,7 @@ func handlerAdminUserDelete(w http.ResponseWriter, rq *http.Request) {
 
 	var lc = l18n.FromRequest(rq)
 	html := views.AdminUserDelete(u, util.NewFormData(), lc)
-	html = views.Base(fmt.Sprintf(lc.Get("admin.user_title"), u.Name), html, l18n.FromRequest(rq), user.FromRequest(rq))
+	html = views.Base(viewutil.MetaFrom(w, rq), fmt.Sprintf(lc.Get("admin.user_title"), u.Name), html)
 
 	if f.HasError() {
 		w.WriteHeader(http.StatusBadRequest)
@@ -153,7 +155,7 @@ func handlerAdminUserNew(w http.ResponseWriter, rq *http.Request) {
 	if rq.Method == http.MethodGet {
 		// New user form
 		html := views.AdminUserNew(util.NewFormData(), lc)
-		html = views.Base(lc.Get("admin.newuser_title"), html, lc, user.FromRequest(rq))
+		html = views.Base(viewutil.MetaFrom(w, rq), lc.Get("admin.newuser_title"), html)
 
 		w.Header().Set("Content-Type", mime.TypeByExtension(".html"))
 		io.WriteString(w, html)
@@ -165,7 +167,7 @@ func handlerAdminUserNew(w http.ResponseWriter, rq *http.Request) {
 
 		if err != nil {
 			html := views.AdminUserNew(f.WithError(err), lc)
-			html = views.Base(lc.Get("admin.newuser_title"), html, lc, user.FromRequest(rq))
+			html = views.Base(viewutil.MetaFrom(w, rq), lc.Get("admin.newuser_title"), html)
 
 			w.WriteHeader(http.StatusBadRequest)
 			w.Header().Set("Content-Type", mime.TypeByExtension(".html"))

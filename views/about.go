@@ -15,20 +15,11 @@ type l10nEntry struct {
 }
 
 func en(v string) l10nEntry {
-	return e().en(v)
-}
-
-func e() l10nEntry {
-	return l10nEntry{}
+	return l10nEntry{_en: v}
 }
 
 func (e l10nEntry) ru(v string) l10nEntry {
 	e._ru = v
-	return e
-}
-
-func (e l10nEntry) en(v string) l10nEntry {
-	e._en = v
 	return e
 }
 
@@ -39,42 +30,60 @@ func (e l10nEntry) get(lang string) string {
 	return e._en
 }
 
-const aboutTemplateString = `<div class="layout">
+const aboutTemplateString = `
 <main class="main-width">
-	<section>
+	<section class="about-page">
 		<h1>{{ printf (get .L.Title) .Cfg.WikiName }}</h1>
-		<ul>
-			<li><b>{{ get .L.Version }}</b> 1.9.0</li>
+		<dl>
+			<dt>{{ get .L.Version }}</dt>
+			<dd>1.10.0</dd>
 		{{ if .Cfg.UseAuth }}
-			<li><b>{{ get .L.UserCount }}</b> {{ .UserCount }}</li>
-			<li><b>{{ get .L.HomePage }}</b> <a href="/">{{ .Cfg.HomeHypha }}</a></li>
-			<li><b>{{ get .L.Admins }}</b> {{$cfg := .Cfg}}{{ range $i, $username := .Admins }}
-				{{ if gt $i 0 }}<span aria-hidden="true">, </span>{{ end }}
-				<a href="/hypha/{{ $cfg.UserHypha }}/{{ $username }}">{{ $username }}</a>
-			{{ end }}</li>
+			<dt>{{ get .L.HomeHypha }}</dt>
+			<dd><a href="/">{{ .Cfg.HomeHypha }}</a></dd>
+
+			<dt>{{get .L.Auth}}</dt>
+			<dd>{{ get .L.AuthOn }}</dd>
+			{{if .Cfg.TelegramEnabled}}<dd>{{get .L.TelegramOn}}</dd>{{end}}
+
+			<dt>{{ get .L.UserCount }}</dt>
+			<dd>{{ .UserCount }}</dd>
+			{{if .Cfg.RegistrationLimit}}
+			<dt>{{get .L.RegistrationLimit}}</dt>
+			<dd>{{.RegistrationLimit}}</dd>
+			{{end}}
+
+			<dt>{{ get .L.Admins }}</dt>
+			{{$cfg := .Cfg}}{{ range $i, $username := .Admins }}
+				<dd><a href="/hypha/{{ $cfg.UserHypha }}/{{ $username }}">{{ $username }}</a></dd>
+			{{ end }}
+
 		{{ else }}
-			<li>{{ get .L.NoAuth }}</li>
+			<dt>{{get .L.Auth}}</dt>
+			<dd>{{ get .L.AuthOff }}</dd>
 		{{ end }}
-		</ul>
-		<p>{{ get .L.AboutHyphae }}</p>
+		</dl>
 	</section>
-</main>
-</div>`
+</main>`
 
 var aboutData = struct {
-	L         map[string]l10nEntry
-	Cfg       map[string]interface{}
-	Admins    []string
-	UserCount uint64
+	L                 map[string]l10nEntry
+	Cfg               map[string]interface{}
+	Admins            []string
+	UserCount         uint64
+	RegistrationLimit uint64
 }{
 	L: map[string]l10nEntry{
-		"Title":       e().en("About %s").ru("О %s"),
-		"Version":     e().en("<a href=\"https://mycorrhiza.wiki\">Mycorrhiza Wiki</a> version:").ru("Версия <a href=\"https://mycorrhiza.wiki\">Микоризы</a>:"),
-		"UserCount":   e().en("User count:").ru("Число пользователей:"),
-		"HomePage":    e().en("Home page:").ru("Домашняя гифа:"),
-		"Admins":      e().en("Administrators:").ru("Администраторы:"),
-		"NoAuth":      e().en("This wiki does not use authorization").ru("На этой вики не используется авторизация"),
-		"AboutHyphae": e().en("See <a href=\"/list\">/list</a> for information about hyphae on this wiki.").ru("См. <a href=\"/list\">/list</a>, чтобы узнать о гифах в этой вики."),
+		"Title":             en("About %s").ru("О %s"),
+		"Version":           en("<a href=\"https://mycorrhiza.wiki\">Mycorrhiza Wiki</a> version").ru("Версия <a href=\"https://mycorrhiza.wiki\">Микоризы</a>"),
+		"UserCount":         en("User count").ru("Число пользователей"),
+		"HomeHypha":         en("Home hypha").ru("Домашняя гифа"),
+		"RegistrationLimit": en("RegistrationLimit").ru("Максимум пользователей"),
+		"Admins":            en("Administrators").ru("Администраторы"),
+
+		"Auth":       en("Authentication").ru("Аутентификация"),
+		"AuthOn":     en("Authentication is on").ru("Аутентификация включена"),
+		"AuthOff":    en("Authentication is off").ru("Аутентификация не включена"),
+		"TelegramOn": en("Telegram authentication is on").ru("Вход через Телеграм включён"),
 	},
 }
 
@@ -89,11 +98,13 @@ func AboutHTML(lc *l18n.Localizer) string {
 	data := aboutData
 	data.Admins = user.ListUsersWithGroup("admin")
 	data.UserCount = user.Count()
+	data.RegistrationLimit = cfg.RegistrationLimit
 	data.Cfg = map[string]interface{}{
-		"UseAuth":   cfg.UseAuth,
-		"WikiName":  cfg.WikiName,
-		"HomeHypha": cfg.HomeHypha,
-		"UserHypha": cfg.UserHypha,
+		"UseAuth":           cfg.UseAuth,
+		"WikiName":          cfg.WikiName,
+		"HomeHypha":         cfg.HomeHypha,
+		"TelegramEnabled":   cfg.TelegramEnabled,
+		"RegistrationLimit": cfg.RegistrationLimit,
 	}
 	var out strings.Builder
 	err = temp.Execute(&out, data)
